@@ -188,7 +188,7 @@ const Home: React.FC = () => {
   }
   return (
     <>
-    <h1>PRODUCTION DEPLOY CHECK!!!!!</h1>
+    {/* <h1>PRODUCTION DEPLOY CHECK!!!!!</h1> */}
       <div className="bg-black flex ">
         <div className="max-sm:hidden w-[15%]">.</div>
         <div className="fixed bottom-0 flex bg-black w-full items-center justify-around py-3 sm:hidden">
