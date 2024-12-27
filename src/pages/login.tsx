@@ -38,13 +38,13 @@ const Login: React.FC = () => {
     }
   };
 
-  if(userId){
-    return(
-        <>
-        <h1>Can't access this page!!</h1>
-        </>
-    )
-  }
+  // if(userId){
+  //   return(
+  //       <>
+  //       <h1>Can't access this page!!</h1>
+  //       </>
+  //   )
+  // }
   return (
     <div className="h-screen flex">
       <div className="flex items-center justify-center h-screen bg-black w-full">
