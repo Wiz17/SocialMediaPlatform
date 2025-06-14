@@ -8,7 +8,7 @@ import { useFetchFollowedUsers } from "../hooks/useFetchFollowedUsers.tsx";
 import { useAddPost } from "../hooks/useAddPost.tsx";
 import { useFileUploader } from "../hooks/useFileUploader.tsx";
 import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+// import { createClient } from "@supabase/supabase-js";
 import { useGenerateNotification } from "../hooks/useGenerateNotification.tsx";
 import Badge from "@mui/material/Badge";
 import NotificationsIcon from "@mui/icons-material/Notifications";
@@ -188,7 +188,8 @@ const Home: React.FC = () => {
   }
   return (
     <>
-    {/* <h1>PRODUCTION DEPLOY CHECK!!!!!</h1> */}
+      <h1>PRODUCTION DEPLOY CHECK!!!!!</h1> 
+      <h1>Check for project setup!!</h1>
       <div className="bg-black flex ">
         <div className="max-sm:hidden w-[15%]">.</div>
         <div className="fixed bottom-0 flex bg-black w-full items-center justify-around py-3 sm:hidden">
