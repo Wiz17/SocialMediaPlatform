@@ -4,43 +4,43 @@ import { fetchMutationGraphQL } from "../graphql/fetcherMutation.tsx";
 import { UNFOLLOW } from "../graphql/queries.tsx";
 import { useState } from "react";
 interface SuggestionCardProps {
-    name: string;
-    userId:string,
-    followedId:string,
-    photo: string;
-    tagName:string
+  name: string;
+  userId: string,
+  followedId: string,
+  photo: string;
+  tagName: string
+}
+
+const followUser = async (followerId: string, followedId: string) => {
+  try {
+    const variables = {
+      followerId,
+      followedId,
+    };
+
+    const response = await fetchMutationGraphQL(FOLLOW, variables);
+    console.log("Follow successful:", response);
+    return response;
+  } catch (error) {
+    console.error("Error following user:", error);
   }
-  
-  const followUser = async (followerId: string, followedId: string) => {
-    try {
-      const variables = {
-        followerId,
-        followedId,
-      };
-  
-      const response = await fetchMutationGraphQL(FOLLOW, variables);
-      console.log("Follow successful:", response);
-      return response;
-    } catch (error) {
-      console.error("Error following user:", error);
-    }
-  };
-  
-  const unfollowUser = async (followId: string) => {
-    try {
-      const variables = {
-        followId,
-      };
-  
-      const response = await fetchMutationGraphQL(UNFOLLOW, variables);
-      console.log("Unfollow successful:", response);
-      return response;
-    } catch (error) {
-      console.error("Error following user:", error);
-    }
-  };
-const SuggestionCard: React.FC<SuggestionCardProps> = ({name,userId , followedId,  photo,tagName}) => {
-    const [followerCreated, setFollowerCreated] = useState("");
+};
+
+const unfollowUser = async (followId: string) => {
+  try {
+    const variables = {
+      followId,
+    };
+
+    const response = await fetchMutationGraphQL(UNFOLLOW, variables);
+    console.log("Unfollow successful:", response);
+    return response;
+  } catch (error) {
+    console.error("Error following user:", error);
+  }
+};
+const SuggestionCard: React.FC<SuggestionCardProps> = ({ name, userId, followedId, photo, tagName }) => {
+  const [followerCreated, setFollowerCreated] = useState("");
   const [buttonClicked, setButtonClicked] = useState(true);
   const [loader, setLoader] = useState(false);
   const handleFollow = async () => {
@@ -85,7 +85,7 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({name,userId , followedId
         <div className="text-center text-gray-100 mt-2">{name}</div>
         <div className="text-gray-500 text-center">{tagName}</div>
         <div className="flex justify-center">
-        {loader ? (
+          {loader ? (
             <button className="text-gray-300 flex items-center" disabled>
               <span className="loader mr-2"></span>{" "}
               {/* Replace with actual loader */}

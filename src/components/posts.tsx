@@ -4,6 +4,7 @@ import { useState,useEffect } from "react";
 import { fetchMutationGraphQL } from "../graphql/fetcherMutation.tsx";
 import { LIKED_POSTS_HANDLE } from "../graphql/queries.tsx";
 import { LIKE_HANDLER} from "../graphql/queries.tsx";
+import { ADD_LIKE, REMOVE_LIKE } from "../graphql/queries/likes.ts";
 
 
 interface PostCardProps {
@@ -15,6 +16,7 @@ interface PostCardProps {
   postImg: string;
   tagName:string;
   likes:number;
+  liked:boolean;
   dataArr:string[];
   dataArrSetState: React.Dispatch<React.SetStateAction<string[]>>; 
 }
@@ -29,12 +31,13 @@ const PostCard: React.FC<PostCardProps> = ({
   postImg,
   tagName,
   likes,
+  liked,
   dataArr,
   dataArrSetState
 }) => {
 
   const userId: string = localStorage.getItem("id") || "";
-  const [likeBtn ,setLikeBtn] = useState<boolean>(dataArr?.includes(id));
+  const [likeBtn ,setLikeBtn] = useState<boolean>(liked);
   const [likeCount, setLikeCount] = useState<number>(Number(likes) || 0); // Convert to number initially
 
 const disLikeHandle = async (id: string) => {
@@ -44,8 +47,10 @@ const disLikeHandle = async (id: string) => {
     const temp = dataArr.filter((dataPostId) => dataPostId !== id);
     dataArrSetState(temp);
 
-    await fetchMutationGraphQL(LIKED_POSTS_HANDLE, { userId, postIds: temp });
-    await fetchMutationGraphQL(LIKE_HANDLER, { postId: id, postLikes: String(likeTemp) }); // Pass as string
+    // await fetchMutationGraphQL(LIKED_POSTS_HANDLE, { userId, postIds: temp });
+    // await fetchMutationGraphQL(LIKE_HANDLER, { postId: id, postLikes: String(likeTemp) });
+    await fetchMutationGraphQL(REMOVE_LIKE, { user_id:userId, post_id: id }); // Pass as string
+
 };
 
 const likeHandle = async (id: string) => {
@@ -55,8 +60,10 @@ const likeHandle = async (id: string) => {
     const temp = [...(dataArr || []), id];
     dataArrSetState(temp);
 
-    await fetchMutationGraphQL(LIKED_POSTS_HANDLE, { userId, postIds: temp });
-    await fetchMutationGraphQL(LIKE_HANDLER, { postId: id, postLikes: String(likeTemp) }); // Pass as string
+    // await fetchMutationGraphQL(LIKED_POSTS_HANDLE, { userId, postIds: temp });
+    // await fetchMutationGraphQL(LIKE_HANDLER, { postId: id, postLikes: String(likeTemp) });
+    await fetchMutationGraphQL(ADD_LIKE, { user_id:userId, post_id: id }); // Pass as string
+
 };
 
 

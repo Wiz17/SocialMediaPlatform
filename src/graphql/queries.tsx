@@ -37,6 +37,14 @@ export const FETCH_POSTS = `
           image
           created_at
           likes
+          likes2Collection{
+            edges{
+              node{
+                like_id
+                user_id
+              }
+            }
+          }
           users{
             username
             profile_picture
