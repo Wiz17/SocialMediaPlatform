@@ -1,4 +1,4 @@
-import React, { useEffect , useRef} from "react";
+import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import PostCard from "../components/posts.tsx";
 import UserCard from "../components/user.tsx";
@@ -17,7 +17,7 @@ import { fetchMutationGraphQL } from "../graphql/fetcherMutation.tsx";
 import { supabase } from "../supabaseClient.jsx";
 import { FETCH_USER } from "../graphql/queries.tsx";
 import SuggestionCard from "../components/suggestionCard.tsx";
-
+import { HomeSvg, CameraSvg, LogoutSvg } from "../utils/svg.tsx";
 const Home: React.FC = () => {
   const userId: string = localStorage.getItem("id") || "";
   const { posts, loading, error } = useFetchFeed(userId);
@@ -147,15 +147,15 @@ const Home: React.FC = () => {
   };
 
 
-  const [dataLikedPosts , setDataLikedPosts] = useState<string[]>([]);
-  useEffect(()=>{
-    const func=async()=>{
-      const data = await fetchMutationGraphQL(LIKED_POSTS_FETCH,{userId});
+  const [dataLikedPosts, setDataLikedPosts] = useState<string[]>([]);
+  useEffect(() => {
+    const func = async () => {
+      const data = await fetchMutationGraphQL(LIKED_POSTS_FETCH, { userId });
       setDataLikedPosts(data.usersCollection.edges[0].node.liked_posts)
     }
     func();
-    
-  },[])
+
+  }, [])
 
   if (!userId) {
     return (
@@ -188,8 +188,9 @@ const Home: React.FC = () => {
   }
   return (
     <>
-      <h1>PRODUCTION DEPLOY CHECK!!!!!</h1> 
-      <h1>Check for project setup!!</h1>
+      {/* <h1>PRODUCTION DEPLOY CHECK!!!!!</h1>
+      <h1>Check for project setup!!</h1> */}
+
       <div className="bg-black flex ">
         <div className="max-sm:hidden w-[15%]">.</div>
         <div className="fixed bottom-0 flex bg-black w-full items-center justify-around py-3 sm:hidden">
@@ -198,21 +199,12 @@ const Home: React.FC = () => {
             alt=""
             className="object-cover w-12 h-12 rounded-[50%]"
           />
-          <Link to="/">
-            <svg
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-10 h-10 "
-            >
-              <g>
-                <path
-                  d="M21.591 7.146L12.52 1.157c-.316-.21-.724-.21-1.04 0l-9.071 5.99c-.26.173-.409.456-.409.757v13.183c0 .502.418.913.929.913H9.14c.51 0 .929-.41.929-.913v-7.075h3.909v7.075c0 .502.417.913.928.913h6.165c.511 0 .929-.41.929-.913V7.904c0-.301-.158-.584-.408-.758z"
-                  fill="white"
-                ></path>
-              </g>
-            </svg>
-          </Link>
+          <div className=" flex justify-end">
+
+            <Link to="/">
+              <HomeSvg />
+            </Link>
+          </div>
           <div className=" flex justify-end">
             <Link to="/notifications">
               <Badge badgeContent={notification} color="primary">
@@ -226,35 +218,7 @@ const Home: React.FC = () => {
                 onClick={handleLogout}
                 className=" text-white rounded-lg "
               >
-                <svg
-                  fill="#ff0000"
-                  height="30px"
-                  width="30px"
-                  version="1.1"
-                  id="Capa_1"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="-38.5 -38.5 461.97 461.97"
-                  stroke="#ff0000"
-                >
-                  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                  <g
-                    id="SVGRepo_tracerCarrier"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  ></g>
-                  <g id="SVGRepo_iconCarrier">
-                    {" "}
-                    <g>
-                      {" "}
-                      <g id="Sign_Out">
-                        {" "}
-                        <path d="M180.455,360.91H24.061V24.061h156.394c6.641,0,12.03-5.39,12.03-12.03s-5.39-12.03-12.03-12.03H12.03 C5.39,0.001,0,5.39,0,12.031V372.94c0,6.641,5.39,12.03,12.03,12.03h168.424c6.641,0,12.03-5.39,12.03-12.03 C192.485,366.299,187.095,360.91,180.455,360.91z"></path>{" "}
-                        <path d="M381.481,184.088l-83.009-84.2c-4.704-4.752-12.319-4.74-17.011,0c-4.704,4.74-4.704,12.439,0,17.179l62.558,63.46H96.279 c-6.641,0-12.03,5.438-12.03,12.151c0,6.713,5.39,12.151,12.03,12.151h247.74l-62.558,63.46c-4.704,4.752-4.704,12.439,0,17.179 c4.704,4.752,12.319,4.752,17.011,0l82.997-84.2C386.113,196.588,386.161,188.756,381.481,184.088z"></path>{" "}
-                      </g>{" "}
-                      <g> </g> <g> </g> <g> </g> <g> </g> <g> </g> <g> </g>{" "}
-                    </g>{" "}
-                  </g>
-                </svg>
+                <LogoutSvg />
               </button>
             ) : (
               <>
@@ -276,21 +240,12 @@ const Home: React.FC = () => {
               className="w-16 h-16 ml-auto mr-4"
             />
           </div>
-          <Link to="/">
-            <svg
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-10 h-10 ml-auto mr-7 mt-4"
-            >
-              <g>
-                <path
-                  d="M21.591 7.146L12.52 1.157c-.316-.21-.724-.21-1.04 0l-9.071 5.99c-.26.173-.409.456-.409.757v13.183c0 .502.418.913.929.913H9.14c.51 0 .929-.41.929-.913v-7.075h3.909v7.075c0 .502.417.913.928.913h6.165c.511 0 .929-.41.929-.913V7.904c0-.301-.158-.584-.408-.758z"
-                  fill="white"
-                ></path>
-              </g>
-            </svg>
+          <div className=" flex justify-end">
+
+          <Link to="/" className="mr-7 mt-3">
+            <HomeSvg />
           </Link>
+          </div>
           <div className="mt-8 flex justify-end">
             <Link to="/notifications">
               <Badge
@@ -308,35 +263,7 @@ const Home: React.FC = () => {
                 onClick={handleLogout}
                 className=" text-white py-2 pr-2.5 rounded-lg "
               >
-                <svg
-                  fill="#ff0000"
-                  height="30px"
-                  width="30px"
-                  version="1.1"
-                  id="Capa_1"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="-38.5 -38.5 461.97 461.97"
-                  stroke="#ff0000"
-                >
-                  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                  <g
-                    id="SVGRepo_tracerCarrier"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  ></g>
-                  <g id="SVGRepo_iconCarrier">
-                    {" "}
-                    <g>
-                      {" "}
-                      <g id="Sign_Out">
-                        {" "}
-                        <path d="M180.455,360.91H24.061V24.061h156.394c6.641,0,12.03-5.39,12.03-12.03s-5.39-12.03-12.03-12.03H12.03 C5.39,0.001,0,5.39,0,12.031V372.94c0,6.641,5.39,12.03,12.03,12.03h168.424c6.641,0,12.03-5.39,12.03-12.03 C192.485,366.299,187.095,360.91,180.455,360.91z"></path>{" "}
-                        <path d="M381.481,184.088l-83.009-84.2c-4.704-4.752-12.319-4.74-17.011,0c-4.704,4.74-4.704,12.439,0,17.179l62.558,63.46H96.279 c-6.641,0-12.03,5.438-12.03,12.151c0,6.713,5.39,12.151,12.03,12.151h247.74l-62.558,63.46c-4.704,4.752-4.704,12.439,0,17.179 c4.704,4.752,12.319,4.752,17.011,0l82.997-84.2C386.113,196.588,386.161,188.756,381.481,184.088z"></path>{" "}
-                      </g>{" "}
-                      <g> </g> <g> </g> <g> </g> <g> </g> <g> </g> <g> </g>{" "}
-                    </g>{" "}
-                  </g>
-                </svg>
+                <LogoutSvg />
               </button>
             ) : (
               <>
@@ -360,17 +287,15 @@ const Home: React.FC = () => {
         <section className="w-full sm:w-[85%] lg:w-[50%] border-r border-r-gray-700 min-h-screen max-sm:pb-10">
           <div className="flex text-white justify-around items-center border-b border-b-gray-700">
             <button
-              className={`hover:bg-zinc-800 w-full text-center py-3 cursor-pointer ${
-                section && "underline"
-              }`}
+              className={`hover:bg-zinc-800 w-full text-center py-3 cursor-pointer ${section && "underline"
+                }`}
               onClick={() => setSection(true)}
             >
               For you
             </button>
             <button
-              className={`hover:bg-zinc-800 w-full text-center py-3 cursor-pointer ${
-                !section && "underline"
-              }`}
+              className={`hover:bg-zinc-800 w-full text-center py-3 cursor-pointer ${!section && "underline"
+                }`}
               onClick={() => setSection(false)}
             >
               Following
@@ -395,39 +320,7 @@ const Home: React.FC = () => {
                         onChange={handleFileChange}
                         className="hidden" // Hide the input but keep it functional
                       />
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        //   xmlns:xlink="http://www.w3.org/1999/xlink"
-                        height="20px"
-                        width="20px"
-                        version="1.1"
-                        id="Capa_1"
-                        viewBox="0 0 15.479 15.479"
-                        //   xml:space="preserve"
-                      >
-                        <g>
-                          <g>
-                            <path
-                              style={{ fill: "#3b82f6" }}
-                              d="M0.318,3.357h6.936l1.397-1.455c0,0-6.411,0-7.466,0c-1.054,0-0.878,0.76-0.878,0.76L0.318,3.357z"
-                            />
-                            <path
-                              style={{ fill: "#3b82f6" }}
-                              d="M14.89,1.814h-4.438c-0.168,0-0.329,0.072-0.44,0.199L8.283,3.97H0.589C0.264,3.97,0,4.233,0,4.558    v8.519c0,0.325,0.264,0.588,0.589,0.588H14.89c0.325,0,0.589-0.263,0.589-0.588V2.403C15.479,2.078,15.216,1.814,14.89,1.814z     M14.302,12.488H1.177V5.146h7.372c0.169,0,0.328-0.072,0.44-0.198l1.729-1.958h3.583v9.498H14.302z"
-                            />
-                            <path
-                              style={{ fill: "#3b82f6" }}
-                              d="M10.99,6.748H9.504L9.379,6.376c0-0.125-0.144-0.228-0.323-0.228H7.678    c-0.179,0-0.325,0.102-0.325,0.228L7.229,6.748H7.018H5.806V6.444H4.937v0.304H4.804c-0.284,0-0.515,0.23-0.515,0.515v3.662    c0,0.285,0.231,0.516,0.515,0.516h5.832c0.755,0,0.869-0.23,0.869-0.516V7.263C11.505,6.978,11.273,6.748,10.99,6.748z     M8.118,10.576c-0.853,0-1.547-0.692-1.547-1.546s0.694-1.546,1.547-1.546c0.854,0,1.546,0.692,1.546,1.546    C9.664,9.884,8.972,10.576,8.118,10.576z"
-                            />
-                            <circle
-                              style={{ fill: "#3b82f6" }}
-                              cx="8.094"
-                              cy="9.03"
-                              r="0.98"
-                            />
-                          </g>
-                        </g>
-                      </svg>
+                      <CameraSvg />
                     </label>
 
                     <button
@@ -478,6 +371,7 @@ const Home: React.FC = () => {
                         postImg={data.image}
                         tagName={data.users.tag_name}
                         likes={data.likes}
+                        liked={data.liked}
                         dataArr={dataLikedPosts}
                         dataArrSetState={setDataLikedPosts}
                       />
