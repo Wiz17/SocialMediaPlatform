@@ -10,16 +10,10 @@ import { useFileUploader } from "../hooks/useFileUploader.tsx";
 import { useState } from "react";
 // import { createClient } from "@supabase/supabase-js";
 import { useGenerateNotification } from "../hooks/useGenerateNotification.tsx";
-import Badge from "@mui/material/Badge";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-import { IS_NOTIFICATION, LIKED_POSTS_FETCH } from "../graphql/queries.tsx";
-import { fetchMutationGraphQL } from "../graphql/fetcherMutation.tsx";
-import { supabase } from "../supabaseClient.jsx";
-import { FETCH_USER } from "../graphql/queries.tsx";
 import SuggestionCard from "../components/suggestionCard.tsx";
-import { HomeSvg, CameraSvg, LogoutSvg } from "../utils/svg.tsx";
+import {CameraSvg} from "../utils/svg.tsx";
 import CalculateTimeAgo from "../helper/calculate-time-ago.ts";
-
+import LeftNav from "../components/leftNav.tsx";
 
 const HomeFeedsPage = () => {
   const userId: string = localStorage.getItem("id") || "";
@@ -34,9 +28,7 @@ const HomeFeedsPage = () => {
   const [file, setFile] = useState<File | null>(null);
   const [notification, setNotification] = useState<number>(0);
   const [userName, setUserName] = useState<string>("");
-  const [profilePhoto, setProfilePhoto] = useState<string>("");
   const [section, setSection] = useState<boolean>(true);
-  const navigate = useNavigate();
   // const [dataLikedPosts, setDataLikedPosts] = useState<string[]>([]);
 
 
@@ -87,145 +79,15 @@ const HomeFeedsPage = () => {
       setFile(e.target.files[0]);
     }
   };
-  
-  useEffect(() => {
-    const func = async () => {
-      const variables = { userId };
 
-      try {
-        const data = await fetchMutationGraphQL(IS_NOTIFICATION, variables);
-        setNotification(
-          data.usersCollection.edges[0].node.tag_notification ? 1 : 0
-        );
-        console.log(
-          data.usersCollection.edges[0].node.tag_notification ? 1 : 0
-        );
-      } catch (error) {
-        console.error("Error fetching notification:", error);
-      }
 
-      try {
-        const data = await fetchMutationGraphQL(FETCH_USER, variables);
-        setUserName(data.usersCollection.edges[0].node.username);
-        setProfilePhoto(data.usersCollection.edges[0].node.profile_picture);
 
-        console.log(data);
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
-    };
-    func();
-  }, []);
-  const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
 
-    if (error) {
-      console.error("Error logging out:", error.message);
-      alert("Failed to log out. Please try again.");
-    } else {
-      console.log("Successfully logged out!");
-      localStorage.removeItem("id");
-      localStorage.removeItem("email");
-      alert("You have been logged out.");
-      navigate("/login");
-    }
-  };
- 
   return (
     <>
       <div className="bg-black flex ">
         <div className="max-sm:hidden w-[15%]">.</div>
-        <div className="fixed bottom-0 flex bg-black w-full items-center justify-around py-3 sm:hidden">
-          <img
-            src={profilePhoto}
-            alt=""
-            className="object-cover w-12 h-12 rounded-[50%]"
-          />
-          <div className=" flex justify-end">
-
-            <Link to="/">
-              <HomeSvg />
-            </Link>
-          </div>
-          <div className=" flex justify-end">
-            <Link to="/notifications">
-              <Badge badgeContent={notification} color="primary">
-                <NotificationsIcon sx={{ color: "white", fontSize: "40px" }} />
-              </Badge>
-            </Link>
-          </div>
-          <div className=" flex justify-end">
-            {userId ? (
-              <button
-                onClick={handleLogout}
-                className=" text-white rounded-lg "
-              >
-                <LogoutSvg />
-              </button>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="bg-blue-500 font-bold text-white py-2 px-4 rounded-lg"
-                >
-                  Login
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-        <section className="max-sm:hidden w-[15%] border-r border-r-gray-700  h-screen fixed top-0 left-0">
-          <div>
-            <img
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/X_logo.jpg/800px-X_logo.jpg"
-              alt="logo"
-              className="w-16 h-16 ml-auto mr-4"
-            />
-          </div>
-          <div className=" flex justify-end">
-
-            <Link to="/" className="mr-7 mt-3">
-              <HomeSvg />
-            </Link>
-          </div>
-          <div className="mt-8 flex justify-end">
-            <Link to="/notifications">
-              <Badge
-                badgeContent={notification}
-                color="primary"
-                sx={{ marginRight: "30px" }}
-              >
-                <NotificationsIcon sx={{ color: "white", fontSize: "40px" }} />
-              </Badge>
-            </Link>
-          </div>
-          <div className="mt-6 flex justify-end mr-5">
-            {userId ? (
-              <button
-                onClick={handleLogout}
-                className=" text-white py-2 pr-2.5 rounded-lg "
-              >
-                <LogoutSvg />
-              </button>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="bg-blue-500 font-bold text-white py-2 px-4 rounded-lg"
-                >
-                  Login
-                </Link>
-              </>
-            )}
-          </div>
-          <div className="absolute bottom-5 right-5">
-            <img
-              src={profilePhoto}
-              alt=""
-              className="object-cover w-12 h-12 rounded-[50%]"
-            />
-          </div>
-        </section>
+        <LeftNav/>
         <section className="w-full sm:w-[85%] lg:w-[50%] border-r border-r-gray-700 min-h-screen max-sm:pb-10">
           <div className="flex text-white justify-around items-center border-b border-b-gray-700">
             <button
