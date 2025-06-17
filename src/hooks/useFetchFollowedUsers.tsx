@@ -15,7 +15,7 @@ export const useFetchFollowedUsers = (userId: string) => {
   const [loading5, setLoading] = useState<boolean>(true);
   const [error5, setError] = useState<string | null>(null);
 
-  const fetchFeed = async () => {
+  const fetchFollowedUsers = async () => {
     try {
       // Step 1: Fetch followed users
       const followedData = await fetchGraphQL(
@@ -59,9 +59,7 @@ export const useFetchFollowedUsers = (userId: string) => {
     }
   };
 
-  useEffect(() => {
-    fetchFeed();
-  }, [userId]);
+  
 
-  return { users2, loading5, error5 };
+  return { fetchFollowedUsers,users2, loading5, error5 };
 };

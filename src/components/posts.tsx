@@ -1,24 +1,27 @@
 import React from "react";
-import {HeartOutlined , HeartFilled} from '@ant-design/icons'
-import { useState,useEffect } from "react";
+import { HeartOutlined, HeartFilled } from '@ant-design/icons'
+import { useState, useEffect } from "react";
 import { fetchMutationGraphQL } from "../graphql/fetcherMutation.tsx";
 import { LIKED_POSTS_HANDLE } from "../graphql/queries.tsx";
-import { LIKE_HANDLER} from "../graphql/queries.tsx";
+import { LIKE_HANDLER } from "../graphql/queries.tsx";
 import { ADD_LIKE, REMOVE_LIKE } from "../graphql/queries/likes.ts";
-
+import { toast } from "sonner"
+import { MessageCircle } from "lucide-react"
+import { requestMaker } from "../graphql/requestMaker.ts";
+import { supabase } from "../supabaseClient.jsx";
 
 interface PostCardProps {
-  id:string;
+  id: string;
   name: string;
-  userImg:string
+  userImg: string
   content: string;
   timeAgo: string;
   postImg: string;
-  tagName:string;
-  likes:number;
-  liked:boolean;
-  dataArr:string[];
-  dataArrSetState: React.Dispatch<React.SetStateAction<string[]>>; 
+  tagName: string;
+  likes: number;
+  liked: boolean;
+  // dataArr: string[];
+  // dataArrSetState: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 // Define the component
@@ -32,39 +35,53 @@ const PostCard: React.FC<PostCardProps> = ({
   tagName,
   likes,
   liked,
-  dataArr,
-  dataArrSetState
+  // dataArr,
+  // dataArrSetState
 }) => {
 
   const userId: string = localStorage.getItem("id") || "";
-  const [likeBtn ,setLikeBtn] = useState<boolean>(liked);
+  const [likeBtn, setLikeBtn] = useState<boolean>(liked);
   const [likeCount, setLikeCount] = useState<number>(Number(likes) || 0); // Convert to number initially
 
-const disLikeHandle = async (id: string) => {
+  const disLikeHandle = async (id: string) => {
     setLikeBtn(false);
     const likeTemp = likeCount - 1; // Process as number
     setLikeCount(likeTemp);
-    const temp = dataArr.filter((dataPostId) => dataPostId !== id);
-    dataArrSetState(temp);
+    const { data: { session } } = await supabase.auth.getSession()
+    const idToken = session?.access_token || "";
+    console.log(idToken)
+    
+    try {
 
-    // await fetchMutationGraphQL(LIKED_POSTS_HANDLE, { userId, postIds: temp });
-    // await fetchMutationGraphQL(LIKE_HANDLER, { postId: id, postLikes: String(likeTemp) });
-    await fetchMutationGraphQL(REMOVE_LIKE, { user_id:userId, post_id: id }); // Pass as string
+      await requestMaker(REMOVE_LIKE,  idToken,{ user_id: userId, post_id: id }); // Pass as string
+    }
+    catch {
+      toast.error("failed to dislike post.")
+    }
 
-};
+  };
 
-const likeHandle = async (id: string) => {
+  const likeHandle = async (id: string) => {
+
     setLikeBtn(true);
     const likeTemp = likeCount + 1; // Process as number
     setLikeCount(likeTemp);
-    const temp = [...(dataArr || []), id];
-    dataArrSetState(temp);
+    // const temp = [...(dataArr || []), id];
+    // dataArrSetState(temp);
 
-    // await fetchMutationGraphQL(LIKED_POSTS_HANDLE, { userId, postIds: temp });
-    // await fetchMutationGraphQL(LIKE_HANDLER, { postId: id, postLikes: String(likeTemp) });
-    await fetchMutationGraphQL(ADD_LIKE, { user_id:userId, post_id: id }); // Pass as string
+    const { data: { session } } = await supabase.auth.getSession()
+    const idToken = session?.access_token || "";
+    console.log(idToken)
+    
+    try {
+      // await fetchMutationGraphQL(ADD_LIKE, { user_id: userId, post_id: id }); // Pass as string
+      await requestMaker(ADD_LIKE,  idToken,{ user_id: userId, post_id: id }); // Pass as string
 
-};
+    } catch {
+      toast.error('Failed to like a post');
+    }
+
+  };
 
 
   return (
@@ -77,7 +94,7 @@ const likeHandle = async (id: string) => {
             className="object-cover w-12 h-12 rounded-[50%]"
           />
         </div>
-        <div className="ml-3 w-9/10">
+        <div className="ml-3 w-9/10 flex flex-col gap-3">
           <div className="flex items-center">
             <h1 className="text-white font-bold text-lg">{name}</h1>
             <span className="text-gray-500 ml-1">{tagName}</span>
@@ -88,14 +105,18 @@ const likeHandle = async (id: string) => {
             <img
               src={postImg}
               alt="Post"
-              className="w-[400px] object-cover rounded-lg mt-3"
+              className="w-[400px] object-cover rounded-lg"
             />
           )}
-          <div className="flex mt-3">
+          <div className="flex gap-3">
 
-          {likeBtn?<HeartFilled style={{color:'red',fontSize:'25px'}} onClick={()=>disLikeHandle(id)}/>:
-          <HeartOutlined style={{color:'white',fontSize:'25px'}} onClick={()=>likeHandle(id)}/>}
-          <div className="text-gray-50 ml-2">{likeCount}</div>
+            {likeBtn ? <HeartFilled style={{ color: 'red', fontSize: '25px' }} onClick={() => disLikeHandle(id)} /> :
+              <HeartOutlined style={{ color: 'white', fontSize: '25px' }} onClick={() => likeHandle(id)} />}
+            {/* <div className="text-gray-50 ml-2">{likes}</div> */}
+            <button><MessageCircle style={{ color: 'white', fontSize: '25px' }} /></button>
+          </div>
+          <div>
+            <p className="text-white">{likeCount} Likes</p>
           </div>
 
         </div>

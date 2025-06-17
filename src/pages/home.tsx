@@ -12,22 +12,24 @@ import { useState } from "react";
 import { useGenerateNotification } from "../hooks/useGenerateNotification.tsx";
 import Badge from "@mui/material/Badge";
 import NotificationsIcon from "@mui/icons-material/Notifications";
-import { IS_NOTIFICATION, LIKED_POSTS_FETCH, LIKED_POSTS_HANDLE } from "../graphql/queries.tsx";
+import { IS_NOTIFICATION, LIKED_POSTS_FETCH } from "../graphql/queries.tsx";
 import { fetchMutationGraphQL } from "../graphql/fetcherMutation.tsx";
 import { supabase } from "../supabaseClient.jsx";
 import { FETCH_USER } from "../graphql/queries.tsx";
 import SuggestionCard from "../components/suggestionCard.tsx";
 import { HomeSvg, CameraSvg, LogoutSvg } from "../utils/svg.tsx";
-const Home: React.FC = () => {
+import CalculateTimeAgo from "../helper/calculate-time-ago.ts";
+
+
+const HomeFeedsPage = () => {
   const userId: string = localStorage.getItem("id") || "";
-  const { posts, loading, error } = useFetchFeed(userId);
-  const { users, loading1, error1 } = useFetchUnfollowedUsers(userId);
-  const { users2, loading5, error5 } = useFetchFollowedUsers(userId);
+  const { fetchFeed, posts, loading, error } = useFetchFeed(userId);
+  const { fetchUnfollowedUsers, users, loading1, error1 } = useFetchUnfollowedUsers(userId);
+  const { fetchFollowedUsers, users2, loading5, error5 } = useFetchFollowedUsers(userId);
   const { addPost, loading2, error2 } = useAddPost();
   const { uploadFile, uploading, error3 } = useFileUploader();
   const { generateNotification, loading4, data, error4 } =
     useGenerateNotification();
-
   const [inputValue, setInputValue] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [notification, setNotification] = useState<number>(0);
@@ -35,8 +37,14 @@ const Home: React.FC = () => {
   const [profilePhoto, setProfilePhoto] = useState<string>("");
   const [section, setSection] = useState<boolean>(true);
   const navigate = useNavigate();
+  // const [dataLikedPosts, setDataLikedPosts] = useState<string[]>([]);
 
-  console.log(users2);
+
+  useEffect(() => {
+    fetchFeed();
+    fetchUnfollowedUsers();
+    fetchFollowedUsers();
+  }, [])
 
   const formSubmitHandle = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,30 +87,7 @@ const Home: React.FC = () => {
       setFile(e.target.files[0]);
     }
   };
-  const calculateTimeAgo = (timestamp: string): string => {
-    const givenTime = new Date(timestamp);
-    const currentTime = new Date();
-
-    // Reduce 5 hours (5 * 60 * 60 * 1000 milliseconds) from the given timestamp
-    givenTime.setTime(givenTime.getTime() + 5 * 60 * 60 * 1000);
-
-    const diffMilliseconds = currentTime.getTime() - givenTime.getTime();
-    const diffSeconds = Math.floor(diffMilliseconds / 1000); // Convert to seconds
-    const diffMinutes = Math.floor(diffSeconds / 60); // Convert to minutes
-
-    if (diffMinutes >= 1440) {
-      // 1440 minutes in a day
-      const days = Math.floor(diffMinutes / 1440); // Convert minutes to days
-      return `${days} d`;
-    } else if (diffMinutes >= 60) {
-      const hours = Math.floor(diffMinutes / 60); // Convert minutes to hours
-      return `${hours} h`;
-    } else if (diffSeconds >= 60) {
-      return `${diffMinutes} m`;
-    } else {
-      return `${diffSeconds} s`;
-    }
-  };
+  
   useEffect(() => {
     const func = async () => {
       const variables = { userId };
@@ -145,52 +130,9 @@ const Home: React.FC = () => {
       navigate("/login");
     }
   };
-
-
-  const [dataLikedPosts, setDataLikedPosts] = useState<string[]>([]);
-  useEffect(() => {
-    const func = async () => {
-      const data = await fetchMutationGraphQL(LIKED_POSTS_FETCH, { userId });
-      setDataLikedPosts(data.usersCollection.edges[0].node.liked_posts)
-    }
-    func();
-
-  }, [])
-
-  if (!userId) {
-    return (
-      <>
-        <div className="h-screen flex items-center justify-center bg-gradient-to-r bg-black ">
-          <div className="text-center bg-gray-800 rounded-lg shadow-lg p-8 max-w-sm">
-            <h1 className="text-2xl font-bold text-gray-100 mb-4">
-              Please Login to Continue!
-            </h1>
-            <p className="text-gray-100 mb-6">
-              You need to log in to access this page. If you don’t have an
-              account, sign up now!
-            </p>
-            <div className="flex justify-center gap-4">
-              <Link to="/login">
-                <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg">
-                  Login
-                </button>
-              </Link>
-              <Link to="/signup">
-                <button className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg">
-                  Sign Up
-                </button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
+ 
   return (
     <>
-      {/* <h1>PRODUCTION DEPLOY CHECK!!!!!</h1>
-      <h1>Check for project setup!!</h1> */}
-
       <div className="bg-black flex ">
         <div className="max-sm:hidden w-[15%]">.</div>
         <div className="fixed bottom-0 flex bg-black w-full items-center justify-around py-3 sm:hidden">
@@ -242,9 +184,9 @@ const Home: React.FC = () => {
           </div>
           <div className=" flex justify-end">
 
-          <Link to="/" className="mr-7 mt-3">
-            <HomeSvg />
-          </Link>
+            <Link to="/" className="mr-7 mt-3">
+              <HomeSvg />
+            </Link>
           </div>
           <div className="mt-8 flex justify-end">
             <Link to="/notifications">
@@ -358,7 +300,7 @@ const Home: React.FC = () => {
               ) : (
                 <div className="p-4">
                   {posts.map((data) => {
-                    const timeAgo = calculateTimeAgo(data.created_at);
+                    const timeAgo = CalculateTimeAgo(data.created_at);
                     // console.log(data)
                     return (
                       <PostCard
@@ -372,8 +314,8 @@ const Home: React.FC = () => {
                         tagName={data.users.tag_name}
                         likes={data.likes}
                         liked={data.liked}
-                        dataArr={dataLikedPosts}
-                        dataArrSetState={setDataLikedPosts}
+                      // dataArr={dataLikedPosts}
+                      // dataArrSetState={setDataLikedPosts}
                       />
                     );
                   })}
@@ -422,7 +364,45 @@ const Home: React.FC = () => {
         </section>
       </div>
     </>
-  );
+  )
+
+}
+
+const NoUseridPageHandle = () => {
+  return (
+    <>
+      <div className="h-screen flex items-center justify-center bg-gradient-to-r bg-black ">
+        <div className="text-center bg-gray-800 rounded-lg shadow-lg p-8 max-w-sm">
+          <h1 className="text-2xl font-bold text-gray-100 mb-4">
+            Please Login to Continue!
+          </h1>
+          <p className="text-gray-100 mb-6">
+            You need to log in to access this page. If you don’t have an
+            account, sign up now!
+          </p>
+          <div className="flex justify-center gap-4">
+            <Link to="/login">
+              <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg">
+                Login
+              </button>
+            </Link>
+            <Link to="/signup">
+              <button className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg">
+                Sign Up
+              </button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+
+}
+
+const Home: React.FC = () => {
+
+  const userId: string = localStorage.getItem("id") || "";
+  return userId ? <HomeFeedsPage /> : <NoUseridPageHandle />;
 };
 
 export default Home;
