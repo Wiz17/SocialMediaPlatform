@@ -1,40 +1,30 @@
 import React, { useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import PostCard from "../components/posts.tsx";
-import UserCard from "../components/user.tsx";
-import { useFetchFeed } from "../hooks/useFetchFeed.tsx";
-import { useFetchUnfollowedUsers } from "../hooks/useFetchUnfollowedUsers.tsx";
-import { useFetchFollowedUsers } from "../hooks/useFetchFollowedUsers.tsx";
-import { useAddPost } from "../hooks/useAddPost.tsx";
-import { useFileUploader } from "../hooks/useFileUploader.tsx";
+import { Link } from "react-router-dom";
+import PostCard from "../../components/posts.tsx";
+import UserCard from "../../components/user.tsx";
+import { useFetchFeed } from "../../hooks/useFetchFeed.tsx";
+import { useFetchFollowedUsers } from "../../hooks/useFetchFollowedUsers.tsx";
+import { useAddPost } from "../../hooks/useAddPost.tsx";
+import { useFileUploader } from "../../hooks/useFileUploader.tsx";
 import { useState } from "react";
 // import { createClient } from "@supabase/supabase-js";
-import { useGenerateNotification } from "../hooks/useGenerateNotification.tsx";
-import SuggestionCard from "../components/suggestionCard.tsx";
-import {CameraSvg} from "../utils/svg.tsx";
-import CalculateTimeAgo from "../helper/calculate-time-ago.ts";
-import LeftNav from "../components/leftNav.tsx";
+import { CameraSvg } from "../../utils/svg.tsx";
+import CalculateTimeAgo from "../../helper/calculate-time-ago.ts";
+import LeftNav from "../../components/leftNav.tsx";
+import FollowSuggestion from "./follow-suggestion.tsx";
 
 const HomeFeedsPage = () => {
   const userId: string = localStorage.getItem("id") || "";
   const { fetchFeed, posts, loading, error } = useFetchFeed(userId);
-  const { fetchUnfollowedUsers, users, loading1, error1 } = useFetchUnfollowedUsers(userId);
   const { fetchFollowedUsers, users2, loading5, error5 } = useFetchFollowedUsers(userId);
   const { addPost, loading2, error2 } = useAddPost();
   const { uploadFile, uploading, error3 } = useFileUploader();
-  const { generateNotification, loading4, data, error4 } =
-    useGenerateNotification();
   const [inputValue, setInputValue] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
-  const [notification, setNotification] = useState<number>(0);
-  const [userName, setUserName] = useState<string>("");
   const [section, setSection] = useState<boolean>(true);
   // const [dataLikedPosts, setDataLikedPosts] = useState<string[]>([]);
-
-
   useEffect(() => {
     fetchFeed();
-    fetchUnfollowedUsers();
     fetchFollowedUsers();
   }, [])
 
@@ -42,36 +32,13 @@ const HomeFeedsPage = () => {
     e.preventDefault();
     if (file) {
       const uploadedUrl = await uploadFile(file, "post-images");
-
-      const input = e.target[0].value;
-      const words = input.split(/\s+/);
-
-      // Filter words that start with @
-      const result = words.filter((word: string) => word.startsWith("@"));
-      if (result.length != 0) {
-        generateNotification(result, userName) //replace it with logged in person userName
-          .then((result) => console.log("Updated Notifications:", result))
-          .catch((err) => console.error("Error in Notification:", err));
-      }
       addPost(userId, e.target[0].value, uploadedUrl.data.publicUrl);
       setFile(null);
     } else {
-      const input = e.target[0].value;
-      const words = input.split(/\s+/);
-
-      // Filter words that start with @
-      const result = words.filter((word: string) => word.startsWith("@"));
-      if (result.length != 0) {
-        generateNotification(result, userName) //replace it with logged in person userName
-          .then((result) => console.log("Updated Notifications:", result))
-          .catch((err) => console.error("Error in Notification:", err));
-      }
-
       addPost(userId, e.target[0].value, "");
       alert("Posted Successfully!!");
       setFile(null);
     }
-
     setInputValue("");
   };
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,15 +46,11 @@ const HomeFeedsPage = () => {
       setFile(e.target.files[0]);
     }
   };
-
-
-
-
   return (
     <>
       <div className="bg-black flex ">
         <div className="max-sm:hidden w-[15%]">.</div>
-        <LeftNav/>
+        <LeftNav />
         <section className="w-full sm:w-[85%] lg:w-[50%] border-r border-r-gray-700 min-h-screen max-sm:pb-10">
           <div className="flex text-white justify-around items-center border-b border-b-gray-700">
             <button
@@ -139,20 +102,10 @@ const HomeFeedsPage = () => {
                 </form>
               </div>
               <div className="lg:hidden p-4">
-                <h1 className="text-white">Suggestions for you.</h1>
-                <div className="flex overflow-x-auto whitespace-nowrap space-x-4 mt-5">
-                  {users.map((data, index) => (
-                    <SuggestionCard
-                      key={index}
-                      name={data.username.trim()}
-                      userId={userId}
-                      followedId={data.id}
-                      photo={data.profile_picture}
-                      tagName={data.tag_name}
-                    />
-                  ))}
-                </div>
+                <FollowSuggestion />
               </div>
+
+              {/* responsive sugest card */}
               {loading ? (
                 <h1 className="text-white text-2xl p-3">Loading.....</h1>
               ) : posts.length === 0 ? ( // Check if the users array is empty
@@ -203,27 +156,12 @@ const HomeFeedsPage = () => {
               </div>
             </>
           )}
+
         </section>
-        <section className="w-[35%] max-lg:hidden">
-          <h1 className="text-white p-4">Suggested For You</h1>
-          {loading1 ? (
-            <h1 className="text-white text-2xl p-3">Loading.....</h1>
-          ) : (
-            users.map((data) => (
-              <div className="p-4" key={data.id}>
-                <UserCard
-                  name={data.username.trim()}
-                  userId={userId}
-                  followedId={data.id}
-                  profilePicture={data.profile_picture}
-                  suggestion={true}
-                  followerCreatedId=""
-                  tagName={data.tag_name}
-                />
-              </div>
-            ))
-          )}
-        </section>
+        <div className="w-[35%] max-lg:hidden">
+          <FollowSuggestion />
+        </div>
+
       </div>
     </>
   )

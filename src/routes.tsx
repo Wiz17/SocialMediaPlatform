@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Home from '././pages/home.tsx';  // Assuming you have Home.tsx
+import Home from './pages/home/home.tsx';  // Assuming you have Home.tsx
 // import About from './About';  // Assuming you have About.tsx
 // import NotFound from './NotFound';  // Assuming you have NotFound.tsx
 import Notifications from './pages/notifications.tsx';
