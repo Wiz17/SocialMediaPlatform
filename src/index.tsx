@@ -9,9 +9,11 @@ const root = ReactDOM.createRoot(
 );
 
 root.render(
-  <React.StrictMode>
+  // <React.StrictMode>
+  <>
     <Routes />
     <Toaster position="bottom-right" richColors />
-  </React.StrictMode>
+  </>
+  // </React.StrictMode>
 );
 

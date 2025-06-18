@@ -38,6 +38,8 @@ export const useFetchFeed = (userId: string) => {
   const [idToken, setIdToken] = useState<string>("");
   const fetchFeed = async () => {
     try {
+      setError(null)
+      setLoading(true)
       // Step 1: Fetch followed users
       const followedData = await requestMaker(
         FETCH_FOLLOWED_USERS.replace("followerId", `"${userId}"`),

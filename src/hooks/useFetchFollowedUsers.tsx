@@ -17,6 +17,8 @@ export const useFetchFollowedUsers = (userId: string) => {
 
   const fetchFollowedUsers = async () => {
     try {
+      setLoading(true)
+      setError(null)
       // Step 1: Fetch followed users
       const followedData = await fetchGraphQL(
         FETCH_FOLLOWED_USERS.replace("followerId", `"${userId}"`)

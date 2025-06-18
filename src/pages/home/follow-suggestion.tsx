@@ -4,6 +4,8 @@ import { useFetchUnfollowedUsers } from "../../hooks/useFetchUnfollowedUsers.tsx
 import UserCard from "../../components/user.tsx"
 import SuspenseUIFollowSuggestion from "../../components/suspense/follow-suggestion.tsx";
 import FollowSuggestionMobile from "../../components/suspense/follow-suggestion-mobile.tsx";
+import SectionWrapper from "../../components/sectionWrapper.tsx";
+
 
 const FollowSuggestion = () => {
     const userId: string = localStorage.getItem("id") || "";
@@ -15,41 +17,32 @@ const FollowSuggestion = () => {
 
         <>
             <section className="w-full mx-auto max-lg:hidden">
-                <h1 className="text-white p-4">Suggested For You</h1>
-                {loading1 ? (
-                    Array(5).fill(0).map(() => {
-                        return (
-                            <>
-                                <SuspenseUIFollowSuggestion />
-                            </>
-                        )
-                    })
-
-                ) : (
-                    users.map((data) => (
-                        <div className="p-4" key={data.id}>
-                            <UserCard
-                                name={data.username.trim()}
-                                userId={userId}
-                                followedId={data.id}
-                                profilePicture={data.profile_picture}
-                                suggestion={true}
-                                followerCreatedId=""
-                                tagName={data.tag_name}
-                            />
-                        </div>
-                    ))
-                )}
-            </section>
-            <div className="lg:hidden">
-                <h1 className="text-white">Suggestions for you.</h1>
-                <div className="flex overflow-x-auto whitespace-nowrap space-x-4 mt-5">
+                <h1 className="text-white p-4 ">Suggested For You</h1>
+                <SectionWrapper loading={loading1} error={error1 ? true : false} onRetry={() => fetchUnfollowedUsers()} loader={<SuspenseUIFollowSuggestion repeat={10} />}>
                     {
-                        loading1
-                            ? Array(5)
-                                .fill(0)
-                                .map((_, i) => <FollowSuggestionMobile key={i} />)
-                            : users.map((data, index) => (
+                        users.map((data) => (
+                            <div className="p-4" key={data.id}>
+                                <UserCard
+                                    name={data.username.trim()}
+                                    userId={userId}
+                                    followedId={data.id}
+                                    profilePicture={data.profile_picture}
+                                    suggestion={true}
+                                    followerCreatedId=""
+                                    tagName={data.tag_name}
+                                />
+                            </div>
+                        ))
+                    }
+                </SectionWrapper>
+            </section>
+
+            <div className="lg:hidden">
+                <h1 className="text-white mb-5">Suggested For You</h1>
+                <SectionWrapper loading={loading1} error={error1 ? true : false} onRetry={() => fetchUnfollowedUsers()} loader={<FollowSuggestionMobile repeat={5} />}>
+                    <div className="flex overflow-x-auto whitespace-nowrap space-x-4">
+                        {
+                            users.map((data, index) => (
                                 <SuggestionCard
                                     key={index}
                                     name={data.username.trim()}
@@ -59,11 +52,14 @@ const FollowSuggestion = () => {
                                     tagName={data.tag_name}
                                 />
                             ))
-                    }
+                        }
 
 
-                </div>
+                    </div>
+                </SectionWrapper>
             </div>
+
+
         </>
     )
 }

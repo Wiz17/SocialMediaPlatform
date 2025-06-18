@@ -12,24 +12,31 @@ import { CameraSvg } from "../../utils/svg.tsx";
 import CalculateTimeAgo from "../../helper/calculate-time-ago.ts";
 import LeftNav from "../../components/leftNav.tsx";
 import FollowSuggestion from "./follow-suggestion.tsx";
-import { Loader } from "lucide-react"
 import PostFeedSuspence from '../../components/suspense/post-feed.tsx'
+import FollowingTab from "./following-tab.tsx";
+import SectionWrapper from "../../components/sectionWrapper.tsx";
+
 
 const HomeFeedsPage = () => {
   const userId: string = localStorage.getItem("id") || "";
   const { fetchFeed, posts, loading, error } = useFetchFeed(userId);
-  const { fetchFollowedUsers, users2, loading5, error5 } = useFetchFollowedUsers(userId);
   const { addPost, loading2, error2 } = useAddPost();
   const { uploadFile, uploading, error3 } = useFileUploader();
   const [inputValue, setInputValue] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [section, setSection] = useState<boolean>(true);
-  // const [dataLikedPosts, setDataLikedPosts] = useState<string[]>([]);
+  const { fetchFollowedUsers, users2, loading5, error5 } = useFetchFollowedUsers(userId);
+
+
   useEffect(() => {
     fetchFeed();
     fetchFollowedUsers();
   }, [])
 
+  const retryHandlePost = () => {
+    fetchFeed();
+
+  }
   const formSubmitHandle = async (e: React.FormEvent) => {
     e.preventDefault();
     if (file) {
@@ -107,61 +114,43 @@ const HomeFeedsPage = () => {
                 <FollowSuggestion />
               </div>
 
-              {/* responsive sugest card */}
-              {loading ? (
-                <div className="flex flex-col gap-3">
-                  {/* <h1 className="text-white text-2xl p-3">
-                    <Loader className="animate-spin h-8 w-8" />
-                  </h1> */}
-                  {Array(5).fill(0).map((_, index) => <PostFeedSuspence key={index} />)}
-                </div>
-              ) : posts.length === 0 ? ( // Check if the users array is empty
-                <h1 className="text-white text-2xl p-3">
-                  Follow to see feed!!
-                </h1>
-              ) : (
-                <div className="p-4">
-                  {posts.map((data) => {
-                    const timeAgo = CalculateTimeAgo(data.created_at);
-                    // console.log(data)
-                    return (
-                      <PostCard
-                        key={data.id}
-                        id={data.id}
-                        name={data.users.username}
-                        userImg={data.users.profile_picture}
-                        content={data.content}
-                        timeAgo={timeAgo}
-                        postImg={data.image}
-                        tagName={data.users.tag_name}
-                        likes={data.likes}
-                        liked={data.liked}
-                      // dataArr={dataLikedPosts}
-                      // dataArrSetState={setDataLikedPosts}
-                      />
-                    );
-                  })}
-                </div>
-              )}
+              <SectionWrapper loading={loading} error={error ? true : false} onRetry={() => retryHandlePost()} loader={<PostFeedSuspence repeat={5} />}>
+                {posts.length === 0 ? ( // Check if the users array is empty
+                  <h1 className="text-white text-2xl p-3">
+                    Follow to see feed!!
+                  </h1>
+                ) : (
+                  <div className="p-4">
+                    {posts.map((data) => {
+                      const timeAgo = CalculateTimeAgo(data.created_at);
+                      // console.log(data)
+                      return (
+                        <PostCard
+                          key={data.id}
+                          id={data.id}
+                          name={data.users.username}
+                          userImg={data.users.profile_picture}
+                          content={data.content}
+                          timeAgo={timeAgo}
+                          postImg={data.image}
+                          tagName={data.users.tag_name}
+                          likes={data.likes}
+                          liked={data.liked}
+                        // dataArr={dataLikedPosts}
+                        // dataArrSetState={setDataLikedPosts}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+              </SectionWrapper>
             </>
           ) : (
             <>
-              <div className="w-full sm:w-2/3 mx-auto">
-                {users2.map((data) => (
-                  <div className="p-4" key={data.id}>
-                    <UserCard
-                      name={data.username.trim()}
-                      userId={userId}
-                      followedId={data.id}
-                      profilePicture={data.profile_picture}
-                      suggestion={false}
-                      followerCreatedId={data.followedId}
-                      tagName={data.tag_name}
-                    />
-                  </div>
-                ))}
-              </div>
+              <FollowingTab fetchFollowedUsers={fetchFollowedUsers} users2={users2} loading5={loading5} error5={error5} />
             </>
+
+
           )}
 
         </section>
