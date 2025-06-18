@@ -4,34 +4,23 @@ import { fetchMutationGraphQL } from "../graphql/fetcherMutation.tsx";
 import { UNFOLLOW } from "../graphql/queries.tsx";
 import { LoadingOutlined } from "@ant-design/icons";
 import { Flex, Spin } from "antd";
+import { toast } from "sonner"
 
 const followUser = async (followerId: string, followedId: string) => {
-  try {
-    const variables = {
-      followerId,
-      followedId,
-    };
-
-    const response = await fetchMutationGraphQL(FOLLOW, variables);
-    console.log("Follow successful:", response);
-    return response;
-  } catch (error) {
-    console.error("Error following user:", error);
-  }
+  const variables = {
+    followerId,
+    followedId,
+  };
+  const response = await fetchMutationGraphQL(FOLLOW, variables);
+  return response;
 };
 
 const unfollowUser = async (followId: string) => {
-  try {
-    const variables = {
-      followId,
-    };
-
-    const response = await fetchMutationGraphQL(UNFOLLOW, variables);
-    console.log("Unfollow successful:", response);
-    return response;
-  } catch (error) {
-    console.error("Error following user:", error);
-  }
+  const variables = {
+    followId,
+  };
+  const response = await fetchMutationGraphQL(UNFOLLOW, variables);
+  return response;
 };
 
 interface UserSuggestion {
@@ -41,7 +30,7 @@ interface UserSuggestion {
   profilePicture: string;
   suggestion: boolean;
   followerCreatedId: string;
-  tagName:string
+  tagName: string
 }
 const PostCard: React.FC<UserSuggestion> = ({
   name,
@@ -67,8 +56,9 @@ const PostCard: React.FC<UserSuggestion> = ({
         );
         setButtonClicked(false);
       }
-    } catch (error) {
-      alert(`Failed to follow ${name}`);
+    } catch {
+      toast.error(`Failed to follow ${name}`);
+      // alert("Failed to follow user.")
     } finally {
       setLoader(false);
     }
@@ -82,8 +72,8 @@ const PostCard: React.FC<UserSuggestion> = ({
         setFollowerCreated("");
         setButtonClicked(true);
       }
-    } catch (error) {
-      alert(`Failed to unfollow ${name}`);
+    } catch {
+      toast.error(`Failed to unfollow ${name}`);
     } finally {
       setLoader(false);
     }

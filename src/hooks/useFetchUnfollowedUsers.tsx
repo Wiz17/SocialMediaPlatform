@@ -7,8 +7,10 @@ export const useFetchUnfollowedUsers = (userId: string) => {
   const [loading1, setLoading] = useState<boolean>(true);
   const [error1, setError] = useState<string | null>(null);
 
-  const fetchFeed = async () => {
+  const fetchUnfollowedUsers = async () => {
     try {
+      setError(null);
+      setLoading(true)
       // Step 1: Fetch followed users
       const followedData = await fetchGraphQL(
         FETCH_FOLLOWED_USERS.replace("followerId", `"${userId}"`)
@@ -40,9 +42,7 @@ export const useFetchUnfollowedUsers = (userId: string) => {
     }
   };
 
-  useEffect(() => {
-    fetchFeed();
-  }, [userId]);
+  
 
-  return { users, loading1, error1 };
+  return { fetchUnfollowedUsers,users, loading1, error1 };
 };

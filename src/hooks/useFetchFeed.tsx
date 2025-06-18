@@ -4,7 +4,9 @@
 import { useState, useEffect } from "react";
 import { fetchGraphQL } from '../graphql/fetcher.tsx'; // Your GraphQL fetch function
 import { FETCH_FOLLOWED_USERS, FETCH_POSTS } from "../graphql/queries.tsx";
-import PostDataHelper from '../utils/api-to-post-data-converter.ts';
+import PostDataHelper from '../helper/api-to-post-data-converter.ts';
+import { supabase } from "../supabaseClient.jsx";
+import { requestMaker } from "../graphql/requestMaker.ts";
 
 export type PostData = {
   node: {
@@ -33,12 +35,15 @@ export const useFetchFeed = (userId: string) => {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-
+  const [idToken, setIdToken] = useState<string>("");
   const fetchFeed = async () => {
     try {
+      setError(null)
+      setLoading(true)
       // Step 1: Fetch followed users
-      const followedData = await fetchGraphQL(
-        FETCH_FOLLOWED_USERS.replace("followerId", `"${userId}"`)
+      const followedData = await requestMaker(
+        FETCH_FOLLOWED_USERS.replace("followerId", `"${userId}"`),
+        idToken
       );
 
       const followedIds = followedData.followersCollection.edges.map(
@@ -46,8 +51,9 @@ export const useFetchFeed = (userId: string) => {
       );
 
       // Step 2: Fetch posts from followed users
-      const postsData = await fetchGraphQL(
-        FETCH_POSTS.replace("userIds", JSON.stringify(followedIds))
+      const postsData = await requestMaker(
+        FETCH_POSTS.replace("userIds", JSON.stringify(followedIds)),
+        idToken
       );
 
       // Sort the posts by `created_at` in ascending order
@@ -69,9 +75,15 @@ export const useFetchFeed = (userId: string) => {
     }
   };
 
+  const fetchAuthToken=async()=>{
+    const { data: { session } } = await supabase.auth.getSession()
+    const idToken = session?.access_token || "";
+    setIdToken(idToken);
+   
+  }
   useEffect(() => {
-    fetchFeed();
+    fetchAuthToken();
   }, [userId]);
 
-  return { posts, loading, error };
+  return { fetchFeed ,posts, loading, error };
 };

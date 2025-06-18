@@ -3,6 +3,7 @@ import { FOLLOW } from "../graphql/queries.tsx";
 import { fetchMutationGraphQL } from "../graphql/fetcherMutation.tsx";
 import { UNFOLLOW } from "../graphql/queries.tsx";
 import { useState } from "react";
+import { toast } from "sonner";
 interface SuggestionCardProps {
   name: string;
   userId: string,
@@ -12,32 +13,24 @@ interface SuggestionCardProps {
 }
 
 const followUser = async (followerId: string, followedId: string) => {
-  try {
+  
     const variables = {
       followerId,
       followedId,
     };
-
     const response = await fetchMutationGraphQL(FOLLOW, variables);
-    console.log("Follow successful:", response);
     return response;
-  } catch (error) {
-    console.error("Error following user:", error);
-  }
+  
 };
 
 const unfollowUser = async (followId: string) => {
-  try {
+  
     const variables = {
       followId,
     };
-
     const response = await fetchMutationGraphQL(UNFOLLOW, variables);
-    console.log("Unfollow successful:", response);
     return response;
-  } catch (error) {
-    console.error("Error following user:", error);
-  }
+ 
 };
 const SuggestionCard: React.FC<SuggestionCardProps> = ({ name, userId, followedId, photo, tagName }) => {
   const [followerCreated, setFollowerCreated] = useState("");
@@ -54,7 +47,7 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({ name, userId, followedI
         setButtonClicked(false);
       }
     } catch (error) {
-      alert(`Failed to follow ${name}`);
+      toast.error(`Failed to follow ${name}`);
     } finally {
       setLoader(false);
     }
@@ -69,7 +62,7 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({ name, userId, followedI
         setButtonClicked(true);
       }
     } catch (error) {
-      alert(`Failed to follow ${name}`);
+      toast.error(`Failed to unfollow ${name}`);
     } finally {
       setLoader(false);
     }
