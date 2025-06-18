@@ -92,7 +92,7 @@ const LeftNav = () => {
                     />
                 </div>
             </section>
-            <div className="fixed bottom-0 flex bg-black w-full items-center justify-around py-3 sm:hidden">
+            <div className="fixed bottom-0 flex bg-black w-full items-center justify-around py-3 sm:hidden z-10">
                 <img
                     src={profilePhoto}
                     alt=""

@@ -100,7 +100,7 @@ const PostCard: React.FC<PostCardProps> = ({
             <span className="text-gray-500 ml-1">{tagName}</span>
             <p className="text-gray-500 ml-3">{timeAgo}</p>
           </div>
-          <p className="text-white">{content}</p>
+          <p className="text-white -mt-2">{content}</p>
           {postImg && (
             <img
               src={postImg}

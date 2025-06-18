@@ -12,6 +12,8 @@ import { CameraSvg } from "../../utils/svg.tsx";
 import CalculateTimeAgo from "../../helper/calculate-time-ago.ts";
 import LeftNav from "../../components/leftNav.tsx";
 import FollowSuggestion from "./follow-suggestion.tsx";
+import { Loader } from "lucide-react"
+import PostFeedSuspence from '../../components/suspense/post-feed.tsx'
 
 const HomeFeedsPage = () => {
   const userId: string = localStorage.getItem("id") || "";
@@ -48,7 +50,7 @@ const HomeFeedsPage = () => {
   };
   return (
     <>
-      <div className="bg-black flex ">
+      <div className="bg-black flex">
         <div className="max-sm:hidden w-[15%]">.</div>
         <LeftNav />
         <section className="w-full sm:w-[85%] lg:w-[50%] border-r border-r-gray-700 min-h-screen max-sm:pb-10">
@@ -107,7 +109,12 @@ const HomeFeedsPage = () => {
 
               {/* responsive sugest card */}
               {loading ? (
-                <h1 className="text-white text-2xl p-3">Loading.....</h1>
+                <div className="flex flex-col gap-3">
+                  {/* <h1 className="text-white text-2xl p-3">
+                    <Loader className="animate-spin h-8 w-8" />
+                  </h1> */}
+                  {Array(5).fill(0).map((_, index) => <PostFeedSuspence key={index} />)}
+                </div>
               ) : posts.length === 0 ? ( // Check if the users array is empty
                 <h1 className="text-white text-2xl p-3">
                   Follow to see feed!!
