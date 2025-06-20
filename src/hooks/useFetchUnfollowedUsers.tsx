@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { fetchGraphQL } from '../graphql/fetcher.tsx'; // Your GraphQL fetch function
-import { FETCH_FOLLOWED_USERS, FETCH_POSTS , FETCH_ALL_USERS} from "../graphql/queries.tsx";
+import { FETCH_FOLLOWED_USERS , FETCH_ALL_USERS} from "../graphql/queries.tsx";
 
 export const useFetchUnfollowedUsers = (userId: string) => {
   const [users, setUsers] = useState<any[]>([]);

@@ -9,7 +9,7 @@ const FollowingTab = ({ fetchFollowedUsers, users2, loading5, error5 }) => {
   const refreshHandle = () => {
     fetchFollowedUsers();
   }
-  // console.log(error5)
+  console.log(users2)
   return (
     <>
       <SectionWrapper loading={loading5} error={error5} onRetry={() => refreshHandle()} loader={<SuspenseUIFollowSuggestion repeat={10} />}>

@@ -50,10 +50,10 @@ const PostCard: React.FC<PostCardProps> = ({
     const { data: { session } } = await supabase.auth.getSession()
     const idToken = session?.access_token || "";
     console.log(idToken)
-    
+
     try {
 
-      await requestMaker(REMOVE_LIKE,  idToken,{ user_id: userId, post_id: id }); // Pass as string
+      await requestMaker(REMOVE_LIKE, idToken, { user_id: userId, post_id: id }); // Pass as string
     }
     catch {
       toast.error("failed to dislike post.")
@@ -72,10 +72,10 @@ const PostCard: React.FC<PostCardProps> = ({
     const { data: { session } } = await supabase.auth.getSession()
     const idToken = session?.access_token || "";
     console.log(idToken)
-    
+
     try {
       // await fetchMutationGraphQL(ADD_LIKE, { user_id: userId, post_id: id }); // Pass as string
-      await requestMaker(ADD_LIKE,  idToken,{ user_id: userId, post_id: id }); // Pass as string
+      await requestMaker(ADD_LIKE, idToken, { user_id: userId, post_id: id }); // Pass as string
 
     } catch {
       toast.error('Failed to like a post');
@@ -86,28 +86,32 @@ const PostCard: React.FC<PostCardProps> = ({
 
   return (
     <>
+      <div className="h-[0.5px] bg-gray-700 w-full mx-auto my-4"></div>
+
       <div className="flex w-full">
-        <div className="w-1/10 min-w-[50px]">
+        <div className="w-1/12 min-w-[50px]">
           <img
             src={userImg}
             alt=""
             className="object-cover w-12 h-12 rounded-[50%]"
           />
         </div>
-        <div className="ml-3 w-9/10 flex flex-col gap-3">
+        <div className="ml-3 w-10/12 flex flex-col gap-3">
           <div className="flex items-center">
             <h1 className="text-white font-bold text-lg">{name}</h1>
             <span className="text-gray-500 ml-1">{tagName}</span>
             <p className="text-gray-500 ml-3">{timeAgo}</p>
           </div>
           <p className="text-white -mt-2">{content}</p>
-          {postImg && (
-            <img
-              src={postImg}
-              alt="Post"
-              className="w-[400px] object-cover rounded-lg"
-            />
-          )}
+          <div className="w-full">
+            {postImg && (
+              <img
+                src={postImg}
+                alt="Post"
+                className="w-full object-cover rounded-lg"
+              />
+            )}
+          </div>
           <div className="flex gap-3">
 
             {likeBtn ? <HeartFilled style={{ color: 'red', fontSize: '25px' }} onClick={() => disLikeHandle(id)} /> :
@@ -118,10 +122,8 @@ const PostCard: React.FC<PostCardProps> = ({
           <div>
             <p className="text-white">{likeCount} Likes</p>
           </div>
-
         </div>
       </div>
-      <div className="h-[0.5px] bg-gray-700 w-full mx-auto my-4"></div>
     </>
   );
 };

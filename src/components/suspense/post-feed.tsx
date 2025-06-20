@@ -13,8 +13,6 @@ const PostFeed: React.FC<PostFeedProps> = ({ repeat }) => {
         <div className="flex flex-col items-center">
           <div className="w-10 h-10 bg-gray-800 rounded-full animate-pulse" />
         </div>
-
-        {/* Right vertical div (name, post, image, actions) */}
         <div className="flex flex-col flex-grow">
           <div className="flex items-center space-x-4">
             <div className="flex-1">
@@ -23,7 +21,7 @@ const PostFeed: React.FC<PostFeedProps> = ({ repeat }) => {
             </div>
           </div>
 
-          <div className="h-56 bg-gray-800 rounded-lg mt-4 animate-pulse" />
+          <div className="h-56 bg-gray-800 rounded-lg mt-4 animate-pulse w-11/12" />
 
           <div className="flex items-center mt-4 space-x-4">
             <div className="w-8 h-8 bg-gray-800 rounded-full animate-pulse" />

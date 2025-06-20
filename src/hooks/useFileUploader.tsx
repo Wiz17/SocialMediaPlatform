@@ -7,13 +7,15 @@ const API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn
 const supabase = createClient(SUPABASE_URL, API_KEY);
 
 export const useFileUploader = () => {
-  const [uploading, setUploading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [error3, setError] = useState<string | null>(null);
 
   const uploadFile = async (file: File, bucketName: string): Promise<any | null> => {
 
 
     try {
+      setUploading(true);
+      setError(null);
       // Generate a unique file path
       const filePath = `${Date.now()}-${file.name}`;
 
@@ -23,7 +25,6 @@ export const useFileUploader = () => {
         .upload(`uploads/${filePath}`, file);
 
       if (error) {
-        console.error("Error uploading file:", error.message);
         setError(error.message);
         return null;
       }
@@ -32,7 +33,6 @@ export const useFileUploader = () => {
       const publicUrl  = supabase.storage.from(bucketName).getPublicUrl(data.path);
       return publicUrl;
     } catch (err: any) {
-      console.error("Error in uploadFile hook:", err.message);
       setError(err.message);
       return null;
     } finally {
