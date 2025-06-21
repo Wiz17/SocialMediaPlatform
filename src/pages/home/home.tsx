@@ -81,9 +81,16 @@ const HomeFeedsPage = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setInputValue(e.target.value);
-    setOpenMentionModal(DetectMentionInPost(e));
-    fetchSuggestions(e.target.value);
-    //make function which debounce input & fetch data fr
+    const mentionedName = DetectMentionInPost(e);
+    
+    if (mentionedName) {
+      setOpenMentionModal(true);
+      fetchSuggestions(mentionedName);
+      return
+    }
+
+    setOpenMentionModal(false)
+    
   };
 
   const handleInput = (e: React.FormEvent<HTMLTextAreaElement>) => {
@@ -91,7 +98,6 @@ const HomeFeedsPage = () => {
     target.style.height = 'auto';
     target.style.height = target.scrollHeight + 'px';
   };
-
 
   return (
     <>
@@ -136,20 +142,10 @@ const HomeFeedsPage = () => {
                       open={openMentionModal}
                       onClose={() => setOpenMentionModal(false)}
                       textareaRef={textareaRef}
-                      mentionSuggestionData={[
-                        { name: 'Elon Musk', tag: 'elonmusk', profileImg: "img/prof" },
-                        { name: 'Jack', tag: 'jack', profileImg: "img/prof" },
-                        { name: 'Sundar Pichai', tag: 'sundarpichai', profileImg: "img/prof" },
-                        { name: 'Tim Cook', tag: 'tim_cook', profileImg: "img/prof" },
-                        { name: 'Tim Cook', tag: 'tim_cook', profileImg: "img/prof" },
-                        { name: 'Tim Cook', tag: 'tim_cook', profileImg: "img/prof" },
-                        { name: 'Tim Cook', tag: 'tim_cook', profileImg: "img/prof" },
-                        { name: 'Tim Cook', tag: 'tim_cook', profileImg: "img/prof" },
-                        { name: 'Tim Cook', tag: 'tim_cook', profileImg: "img/prof" },
-                        { name: 'Tim Cook', tag: 'tim_cook', profileImg: "img/prof" },
-                        { name: 'Tim Cook', tag: 'tim_cook', profileImg: "img/prof" },
+                      mentionSuggestionData={
+                        suggestions
 
-                      ]}
+                      }
                     />
                   </div>
 
@@ -226,9 +222,9 @@ const HomeFeedsPage = () => {
           )}
 
         </section>
-        {/* <div className="w-[35%] max-lg:hidden">
+        <div className="w-[35%] max-lg:hidden">
           <FollowSuggestion />
-        </div> */}
+        </div>
 
       </div>
     </>
