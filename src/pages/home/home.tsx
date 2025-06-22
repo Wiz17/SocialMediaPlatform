@@ -28,9 +28,9 @@ const HomeFeedsPage = () => {
   const { fetchFollowedUsers, users2, loading5, error5 } = useFetchFollowedUsers(userId);
   const {fetchSuggestions,loading:loading6,error:error6,suggestions}=useMentionSuggestor();
 
-  const [inputValue, setInputValue] = useState<string>("");
+  const [inputValue, setInputValue] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [section, setSection] = useState<boolean>(true);
+  const [section, setSection] = useState(true);
   const [imgUrl, setImgUrl] = useState("")
   const [openMentionModal, setOpenMentionModal] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -178,11 +178,11 @@ const HomeFeedsPage = () => {
                   </div>
                 </form>
               </div>
-              {/* <div className="lg:hidden p-4">
+              <div className="lg:hidden p-4">
                 <FollowSuggestion />
-              </div> */}
+              </div>
 
-              {/* <SectionWrapper loading={loading} error={error ? true : false} onRetry={() => fetchFeed()} loader={<PostFeedSuspence repeat={5} />}>
+              <SectionWrapper loading={loading} error={error ? true : false} onRetry={() => fetchFeed()} loader={<PostFeedSuspence repeat={5} />}>
                 {posts.length === 0 ? ( // Check if the users array is empty
                   <h1 className="text-white text-2xl p-3">
                     Follow to see feed!!
@@ -211,7 +211,7 @@ const HomeFeedsPage = () => {
                     })}
                   </div>
                 )}
-              </SectionWrapper> */}
+              </SectionWrapper>
             </>
           ) : (
             <>
