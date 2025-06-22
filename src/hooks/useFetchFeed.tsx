@@ -2,7 +2,6 @@
 // create query for adding data to likes2 table 
 // when fetching data from table convert it to format with helper of count:number & liked:boolean.
 import { useState, useEffect } from "react";
-import { fetchGraphQL } from '../graphql/fetcher.tsx'; // Your GraphQL fetch function
 import { FETCH_FOLLOWED_USERS, FETCH_POSTS } from "../graphql/queries.tsx";
 import PostDataHelper from '../helper/api-to-post-data-converter.ts';
 import { supabase } from "../supabaseClient.jsx";

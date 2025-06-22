@@ -1,7 +1,6 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import PostCard from "../../components/posts.tsx";
-import UserCard from "../../components/user.tsx";
 import { useFetchFeed } from "../../hooks/useFetchFeed.tsx";
 import { useFetchFollowedUsers } from "../../hooks/useFetchFollowedUsers.tsx";
 import { useAddPost } from "../../hooks/useAddPost.tsx";
@@ -15,46 +14,91 @@ import FollowSuggestion from "./follow-suggestion.tsx";
 import PostFeedSuspence from '../../components/suspense/post-feed.tsx'
 import FollowingTab from "./following-tab.tsx";
 import SectionWrapper from "../../components/sectionWrapper.tsx";
-
+import { X } from "lucide-react";
+import { toast } from "sonner";
+import DetectMentionInPost from "../../helper/detect-mention-in-post.ts";
+import MentionSuggestionModal from "../../components/mentionSuggestionModal.tsx";
+import useMentionSuggestor from "../../hooks/useMentionSuggestor.ts";
 
 const HomeFeedsPage = () => {
   const userId: string = localStorage.getItem("id") || "";
   const { fetchFeed, posts, loading, error } = useFetchFeed(userId);
-  const { addPost, loading2, error2 } = useAddPost();
-  const { uploadFile, uploading, error3 } = useFileUploader();
-  const [inputValue, setInputValue] = useState<string>("");
-  const [file, setFile] = useState<File | null>(null);
-  const [section, setSection] = useState<boolean>(true);
+  const { addPost, loading2, error2: errorInPosting } = useAddPost();
+  const { uploadFile, uploading, error3: uploadingError } = useFileUploader();
   const { fetchFollowedUsers, users2, loading5, error5 } = useFetchFollowedUsers(userId);
+  const {fetchSuggestions,loading:loading6,error:error6,suggestions}=useMentionSuggestor();
 
+  const [inputValue, setInputValue] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [section, setSection] = useState(true);
+  const [imgUrl, setImgUrl] = useState("")
+  const [openMentionModal, setOpenMentionModal] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     fetchFeed();
     fetchFollowedUsers();
+    
   }, [])
 
-  const retryHandlePost = () => {
-    fetchFeed();
-
-  }
   const formSubmitHandle = async (e: React.FormEvent) => {
     e.preventDefault();
     if (file) {
       const uploadedUrl = await uploadFile(file, "post-images");
-      addPost(userId, e.target[0].value, uploadedUrl.data.publicUrl);
-      setFile(null);
+      console.log(uploadingError, uploadedUrl)
+      if (uploadingError || uploadedUrl === null) {
+        toast.error("Failed to upload image.")
+        return;
+      }
+      addPost(userId, inputValue, uploadedUrl.data.publicUrl);
+      if (errorInPosting) {
+        toast.error("Failed to make post.")
+        return;
+      }
+      toast.success("Posted Successfully!!")
+
     } else {
-      addPost(userId, e.target[0].value, "");
-      alert("Posted Successfully!!");
-      setFile(null);
+      addPost(userId, inputValue, "");
+      if (errorInPosting) {
+        toast.error("Failed to make post.")
+        return;
+      }
+      toast.success("Posted Successfully!!")
+
     }
+    setFile(null);
     setInputValue("");
+    setImgUrl("")
   };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
+
+      setImgUrl(URL.createObjectURL(e.target.files[0]))
     }
   };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setInputValue(e.target.value);
+    const mentionedName = DetectMentionInPost(e);
+    
+    if (mentionedName) {
+      setOpenMentionModal(true);
+      fetchSuggestions(mentionedName);
+      return
+    }
+
+    setOpenMentionModal(false)
+    
+  };
+
+  const handleInput = (e: React.FormEvent<HTMLTextAreaElement>) => {
+    const target = e.target as HTMLTextAreaElement;
+    target.style.height = 'auto';
+    target.style.height = target.scrollHeight + 'px';
+  };
+
   return (
     <>
       <div className="bg-black flex">
@@ -77,19 +121,44 @@ const HomeFeedsPage = () => {
               Following
             </button>
           </div>
+
+
           {section ? (
             <>
-              <div>
-                <form onSubmit={formSubmitHandle}>
-                  <input
-                    type="text"
-                    placeholder="What is happening?!"
-                    className="text-white bg-transparent text-xl p-4 border-none hover:border-none focus:outline-none w-full"
-                    value={inputValue}
-                    required
-                    onChange={(e) => setInputValue(e.target.value)}
-                  />
-                  <div className="p-4 flex justify-between items-center">
+              <div className="w-10/12 mx-auto pt-6">
+                <form onSubmit={formSubmitHandle} className="flex flex-col gap-3">
+                  <div className="relative">
+                    <textarea
+                      ref={textareaRef}
+                      placeholder="What is happening?!"
+                      className="text-white bg-transparent text-xl border-none hover:border-none focus:outline-none w-full resize-none overflow-hidden min-h-[1.5rem]"
+                      value={inputValue}
+                      required
+                      onChange={handleInputChange}
+                      onInput={handleInput}
+                      rows={1}
+                    />
+                    <MentionSuggestionModal
+                      open={openMentionModal}
+                      onClose={() => setOpenMentionModal(false)}
+                      textareaRef={textareaRef}
+                      mentionSuggestionData={
+                        suggestions
+
+                      }
+                    />
+                  </div>
+
+                  <div className="relative">
+                    <img src={imgUrl} className="w-full object-cover" />
+                    {imgUrl && <button className="absolute -top-2 -right-2 bg-gray-900 text-white p-2 rounded-full" onClick={() => setImgUrl("")}>
+
+                      <X />
+                    </button>}
+                  </div>
+
+
+                  <div className="flex justify-between items-center">
                     <label className="cursor-pointer">
                       <input
                         type="file"
@@ -101,20 +170,19 @@ const HomeFeedsPage = () => {
 
                     <button
                       type="submit"
-                      className="bg-blue-500 text-white px-4 py-2 rounded-3xl hover:bg-blue-600 focus:outline-none font-bold"
-                      disabled={loading2}
+                      className="bg-blue-500 text-white px-4 py-2 rounded-3xl hover:bg-blue-600 focus:outline-none font-bold disabled:bg-gray-400 disabled:text-black disabled:cursor-not-allowed disabled:hover:bg-gray-400"
+                      disabled={loading2 || uploading || inputValue.length === 0}
                     >
-                      {loading2 ? "Posting..." : "Post"}
+                      {loading2 || uploading ? "Posting..." : "Post"}
                     </button>
                   </div>
-                  <div className="h-[0.5px] bg-gray-700 w-[95%] mx-auto"></div>
                 </form>
               </div>
               <div className="lg:hidden p-4">
                 <FollowSuggestion />
               </div>
 
-              <SectionWrapper loading={loading} error={error ? true : false} onRetry={() => retryHandlePost()} loader={<PostFeedSuspence repeat={5} />}>
+              <SectionWrapper loading={loading} error={error ? true : false} onRetry={() => fetchFeed()} loader={<PostFeedSuspence repeat={5} />}>
                 {posts.length === 0 ? ( // Check if the users array is empty
                   <h1 className="text-white text-2xl p-3">
                     Follow to see feed!!

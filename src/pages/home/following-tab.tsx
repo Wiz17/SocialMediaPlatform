@@ -6,13 +6,10 @@ import SectionWrapper from "../../components/sectionWrapper.tsx";
 const userId: string = localStorage.getItem("id") || "";
 const FollowingTab = ({ fetchFollowedUsers, users2, loading5, error5 }) => {
 
-  const refreshHandle = () => {
-    fetchFollowedUsers();
-  }
-  // console.log(error5)
+  console.log(users2)
   return (
     <>
-      <SectionWrapper loading={loading5} error={error5} onRetry={() => refreshHandle()} loader={<SuspenseUIFollowSuggestion repeat={10} />}>
+      <SectionWrapper loading={loading5} error={error5} onRetry={() => fetchFollowedUsers()} loader={<SuspenseUIFollowSuggestion repeat={10} />}>
         <div>
           {users2.length === 0 ? (
             <div className="w-full sm:w-2/3 mx-auto text-center py-16">
@@ -28,10 +25,10 @@ const FollowingTab = ({ fetchFollowedUsers, users2, loading5, error5 }) => {
                   <UserCard
                     name={data.username.trim()}
                     userId={userId}
-                    followedId={data.id}
+                    followedId={data.followed_id}
                     profilePicture={data.profile_picture}
                     suggestion={false}
-                    followerCreatedId={data.followedId}
+                    followerCreatedId={data.follwersIdPk}
                     tagName={data.tag_name}
                   />
                 </div>

@@ -1,67 +1,80 @@
-import { useState, useEffect } from "react";
-import { fetchGraphQL } from "../graphql/fetcher.tsx"; // Your GraphQL fetch function
-import { FETCH_FOLLOWED_USERS, FETCH_POSTS, FETCH_ALL_USERS } from "../graphql/queries.tsx";
+import { useState } from "react";
+import { supabase } from "../supabaseClient.jsx";
 
 interface User {
-  followedId: string;
-  id: string;
+  follwersIdPk:string;
+  followed_id: string;
   username: string;
   profile_picture: string;
-  tag_name:string
+  tag_name: string;
 }
 
-export const useFetchFollowedUsers = (userId: string) => {
-  const [users2, setUsers] = useState<User[]>([]); // Strongly typed users array
-  const [loading5, setLoading] = useState<boolean>(true);
+interface FollowerRecord {
+  created_at: string;
+  follower_id: string;
+  users: User;
+}
+
+interface UseFetchFollowedUsersReturn {
+  fetchFollowedUsers: () => Promise<void>;
+  users2: User[];
+  loading5: boolean;
+  error5: string | null;
+}
+
+export const useFetchFollowedUsers = (userId: string): UseFetchFollowedUsersReturn => {
+  const [users2, setUsers] = useState<User[]>([]); // Properly typed users array
+  const [loading5, setLoading] = useState<boolean>(false); // Changed to false initially
   const [error5, setError] = useState<string | null>(null);
 
-  const fetchFollowedUsers = async () => {
+  const fetchFollowedUsers = async (): Promise<void> => {
     try {
-      setLoading(true)
-      setError(null)
-      // Step 1: Fetch followed users
-      const followedData = await fetchGraphQL(
-        FETCH_FOLLOWED_USERS.replace("followerId", `"${userId}"`)
-      );
-      const followedIds = followedData.followersCollection.edges.map((edge: any) => ({
-        id: edge.node.id,
-        followed_id: edge.node.followed_id,
-      }));
+      setLoading(true);
+      setError(null);
       
-    //   followedIds.push(userId); // Add current user to the list of followed IDs
-       console.log(followedIds)
-      // Step 2: Fetch all users
-      const allUsers = await fetchGraphQL(FETCH_ALL_USERS);
-      const users = allUsers.usersCollection.edges.map((edge: any) => edge.node);
-      console.log(users)
+      // Fetch followed users
+      const { data: followers, error } = await supabase
+        .from('followers')
+        .select(`
+          id,
+          created_at,
+          follower_id,
+          users!followers_followed_id_fkey (
+            id,
+            username,
+            tag_name,
+            profile_picture
+          )
+        `)
+        .eq('follower_id', userId);
 
-      // Step 3: Filter users to exclude those in followedIds
-      const followedUsers = users
-      .filter((user: { id: any; }) =>
-        followedIds.some((followed: { followed_id: any; }) => followed.followed_id == user.id)
-      )
-      .map((user: { id: any; }) => {
-        const matchedFollowed = followedIds.find(
-          (followed: { followed_id: any; }) => followed.followed_id === user.id
-        );
-        return {
-          ...user,
-          followedId: matchedFollowed?.id,
-        };
-      });
+      console.log(followers);
 
-      
-      console.log(followedUsers)
-      setUsers(followedUsers); // Update state with unfollowed users
-    } catch (err: any) {
-      setError(err?.message || "An error occurred while fetching users.");
-      console.error("Error fetching feed:", err);
+      if (error) {
+        setError(error.message);
+        return;
+      }
+
+      // Type-safe mapping with null checks
+      const fetchedFollowedUsersData: User[] = (followers || [])
+        .filter((follower: any) => follower.users !== null)
+        .map((follower: any) => ({
+          follwersIdPk:follower.id,
+          followed_id:follower.users.id,
+          username:follower.users.username,
+          tag_name:follower.users.tag_name,
+          profile_picture:follower.users.profile_picture,
+        }));
+
+        console.log(fetchedFollowedUsersData)
+      setUsers(fetchedFollowedUsersData);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "An error occurred while fetching users.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  
-
-  return { fetchFollowedUsers,users2, loading5, error5 };
+  return { fetchFollowedUsers, users2, loading5, error5 };
 };

@@ -32,8 +32,10 @@ const unfollowUser = async (followId: string) => {
     return response;
  
 };
+
+
 const SuggestionCard: React.FC<SuggestionCardProps> = ({ name, userId, followedId, photo, tagName }) => {
-  const [followerCreated, setFollowerCreated] = useState("");
+  
   const [buttonClicked, setButtonClicked] = useState(true);
   const [loader, setLoader] = useState(false);
   const handleFollow = async () => {
@@ -41,9 +43,9 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({ name, userId, followedI
       setLoader(true);
       const response = await followUser(userId, followedId);
       if (response) {
-        setFollowerCreated(
-          response.insertIntofollowersCollection.records[0].id
-        );
+        // setFollowerCreated(
+        //   response.insertIntofollowersCollection.records[0].id
+        // );
         setButtonClicked(false);
       }
     } catch (error) {
@@ -56,9 +58,10 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({ name, userId, followedI
   const handleUnfollow = async () => {
     try {
       setLoader(true);
-      const response = await unfollowUser(followerCreated);
+
+      const response = await unfollowUser(followedId);
       if (response) {
-        setFollowerCreated("");
+        // setFollowerCreated("");
         setButtonClicked(true);
       }
     } catch (error) {

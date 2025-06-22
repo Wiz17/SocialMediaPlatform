@@ -3,7 +3,7 @@ import { FOLLOW } from "../graphql/queries.tsx";
 import { fetchMutationGraphQL } from "../graphql/fetcherMutation.tsx";
 import { UNFOLLOW } from "../graphql/queries.tsx";
 import { LoadingOutlined } from "@ant-design/icons";
-import { Flex, Spin } from "antd";
+import { Spin } from "antd";
 import { toast } from "sonner"
 
 const followUser = async (followerId: string, followedId: string) => {
@@ -17,8 +17,9 @@ const followUser = async (followerId: string, followedId: string) => {
 
 const unfollowUser = async (followId: string) => {
   const variables = {
-    followId,
+    followId
   };
+  console.log(followId)
   const response = await fetchMutationGraphQL(UNFOLLOW, variables);
   return response;
 };
@@ -32,7 +33,7 @@ interface UserSuggestion {
   followerCreatedId: string;
   tagName: string
 }
-const PostCard: React.FC<UserSuggestion> = ({
+const UserCard: React.FC<UserSuggestion> = ({
   name,
   userId,
   followedId,
@@ -41,19 +42,15 @@ const PostCard: React.FC<UserSuggestion> = ({
   followerCreatedId,
   tagName
 }) => {
-  const [followerCreated, setFollowerCreated] = useState(
-    followerCreatedId ? followerCreatedId : ""
-  );
+  
   const [buttonClicked, setButtonClicked] = useState(suggestion);
   const [loader, setLoader] = useState(false);
+  // console.log(followerCreatedId)
   const handleFollow = async () => {
     try {
       setLoader(true);
       const response = await followUser(userId, followedId);
       if (response) {
-        setFollowerCreated(
-          response.insertIntofollowersCollection.records[0].id
-        );
         setButtonClicked(false);
       }
     } catch {
@@ -67,9 +64,10 @@ const PostCard: React.FC<UserSuggestion> = ({
   const handleUnfollow = async () => {
     try {
       setLoader(true);
-      const response = await unfollowUser(followerCreated);
+      console.log(followerCreatedId, followedId)
+
+      const response = await unfollowUser(followerCreatedId);
       if (response) {
-        setFollowerCreated("");
         setButtonClicked(true);
       }
     } catch {
@@ -116,4 +114,4 @@ const PostCard: React.FC<UserSuggestion> = ({
   );
 };
 
-export default PostCard;
+export default UserCard;
