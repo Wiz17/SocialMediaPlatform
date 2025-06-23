@@ -1,3 +1,4 @@
+//implement updates info tab.
 import React, { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import PostCard from "../../components/posts.tsx";
@@ -6,7 +7,6 @@ import { useFetchFollowedUsers } from "../../hooks/useFetchFollowedUsers.tsx";
 import { useAddPost } from "../../hooks/useAddPost.tsx";
 import { useFileUploader } from "../../hooks/useFileUploader.tsx";
 import { useState } from "react";
-// import { createClient } from "@supabase/supabase-js";
 import { CameraSvg } from "../../utils/svg.tsx";
 import CalculateTimeAgo from "../../helper/calculate-time-ago.ts";
 import LeftNav from "../../components/leftNav.tsx";
@@ -35,7 +35,6 @@ const HomeFeedsPage = () => {
     error: error6,
     suggestions,
   } = useMentionSuggestor();
-
   const [inputValue, setInputValue] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [section, setSection] = useState(true);
@@ -52,7 +51,6 @@ const HomeFeedsPage = () => {
     e.preventDefault();
     if (file) {
       const uploadedUrl = await uploadFile(file, "post-images");
-      console.log(uploadingError, uploadedUrl);
       if (uploadingError || uploadedUrl === null) {
         toast.error("Failed to upload image.");
         return;
@@ -201,9 +199,28 @@ const HomeFeedsPage = () => {
                 loader={<PostFeedSuspence repeat={5} />}
               >
                 {posts.length === 0 ? ( // Check if the users array is empty
-                  <h1 className="text-white text-2xl p-3">
-                    Follow to see feed!!
-                  </h1>
+                  <div className="text-center py-8">
+                    <h1 className="text-white text-4xl font-light mb-4 tracking-wide">
+                      Follow to see{" "}
+                      <span className="font-bold text-blue-400 relative">
+                        feed
+                        <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-blue-400 rounded-full"></div>
+                      </span>
+                    </h1>
+                    <div className="flex justify-center">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                        <div
+                          className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.1s" }}
+                        ></div>
+                        <div
+                          className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.2s" }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
                 ) : (
                   <div className="p-4">
                     {posts.map((data) => {
