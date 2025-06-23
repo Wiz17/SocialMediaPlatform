@@ -1,11 +1,11 @@
 import React from "react";
 
-const HomeSvg = () => (
+const HomeSvg = ({ className = "" }) => (
   <svg
     viewBox="0 0 24 24"
     aria-hidden="true"
     xmlns="http://www.w3.org/2000/svg"
-    className="w-10 h-10"
+    className={className}
   >
     <g>
       <path
@@ -16,16 +16,15 @@ const HomeSvg = () => (
   </svg>
 );
 
-const LogoutSvg = () => (
+const LogoutSvg = ({ className = "" }) => (
   <svg
     fill="#ff0000"
-    height="30px"
-    width="30px"
     version="1.1"
     id="Capa_1"
     xmlns="http://www.w3.org/2000/svg"
     viewBox="-38.5 -38.5 461.97 461.97"
     stroke="#ff0000"
+    className={className}
   >
     <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
     <g
@@ -44,7 +43,7 @@ const LogoutSvg = () => (
   </svg>
 );
 
-const CameraSvg = () => (
+const CameraSvg = ({ className = "" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     height="20px"
@@ -52,6 +51,7 @@ const CameraSvg = () => (
     version="1.1"
     id="Capa_1"
     viewBox="0 0 15.479 15.479"
+    className={className}
   >
     <g>
       <g>
@@ -67,12 +67,7 @@ const CameraSvg = () => (
           style={{ fill: "#3b82f6" }}
           d="M10.99,6.748H9.504L9.379,6.376c0-0.125-0.144-0.228-0.323-0.228H7.678    c-0.179,0-0.325,0.102-0.325,0.228L7.229,6.748H7.018H5.806V6.444H4.937v0.304H4.804c-0.284,0-0.515,0.23-0.515,0.515v3.662    c0,0.285,0.231,0.516,0.515,0.516h5.832c0.755,0,0.869-0.23,0.869-0.516V7.263C11.505,6.978,11.273,6.748,10.99,6.748z     M8.118,10.576c-0.853,0-1.547-0.692-1.547-1.546s0.694-1.546,1.547-1.546c0.854,0,1.546,0.692,1.546,1.546    C9.664,9.884,8.972,10.576,8.118,10.576z"
         />
-        <circle
-          style={{ fill: "#3b82f6" }}
-          cx="8.094"
-          cy="9.03"
-          r="0.98"
-        />
+        <circle style={{ fill: "#3b82f6" }} cx="8.094" cy="9.03" r="0.98" />
       </g>
     </g>
   </svg>

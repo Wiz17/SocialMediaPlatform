@@ -1,34 +1,36 @@
 // things need tobe implemented
-// create query for adding data to likes2 table 
+// create query for adding data to likes2 table
 // when fetching data from table convert it to format with helper of count:number & liked:boolean.
 import { useState, useEffect } from "react";
 import { FETCH_FOLLOWED_USERS, FETCH_POSTS } from "../graphql/queries.tsx";
-import PostDataHelper from '../helper/api-to-post-data-converter.ts';
+import PostDataHelper from "../helper/api-to-post-data-converter.ts";
 import { supabase } from "../supabaseClient.jsx";
 import { requestMaker } from "../graphql/requestMaker.ts";
 
 export type PostData = {
   node: {
-    content: string,
-    created_at: string,
-    id: string,
-    image: string,
-    likes: number,
+    content: string;
+    created_at: string;
+    id: string;
+    image: string;
+    likes: number;
     likes2Collection: {
-      edges: [{
-        node: {
-          user_id: string,
-          like_id: string
-        }
-      }]
-    }
+      edges: [
+        {
+          node: {
+            user_id: string;
+            like_id: string;
+          };
+        },
+      ];
+    };
     users: {
-      profile_picture: string,
-      tag_name: string,
-      username: string,
-    }
-  }
-}
+      profile_picture: string;
+      tag_name: string;
+      username: string;
+    };
+  };
+};
 
 export const useFetchFeed = (userId: string) => {
   const [posts, setPosts] = useState<any[]>([]);
@@ -37,31 +39,39 @@ export const useFetchFeed = (userId: string) => {
   const [idToken, setIdToken] = useState<string>("");
   const fetchFeed = async () => {
     try {
-      setError(null)
-      setLoading(true)
+      setError(null);
+      setLoading(true);
       // Step 1: Fetch followed users
       const followedData = await requestMaker(
         FETCH_FOLLOWED_USERS.replace("followerId", `"${userId}"`),
-        idToken
+        idToken,
       );
 
       const followedIds = followedData.followersCollection.edges.map(
-        (edge: any) => edge.node.followed_id
+        (edge: any) => edge.node.followed_id,
       );
 
       // Step 2: Fetch posts from followed users
       const postsData = await requestMaker(
         FETCH_POSTS.replace("userIds", JSON.stringify(followedIds)),
-        idToken
+        idToken,
       );
 
+      const isEmpty = postsData.postsCollection.edges.length === 0;
+      console.log(postsData, isEmpty);
+      if (isEmpty) {
+        setPosts([]);
+        return;
+      }
       // Sort the posts by `created_at` in ascending order
       const sortedPosts: PostData[] = postsData.postsCollection.edges.sort(
-        (a: any, b: any) => new Date(b.node.created_at).getTime() - new Date(a.node.created_at).getTime()
+        (a: any, b: any) =>
+          new Date(b.node.created_at).getTime() -
+          new Date(a.node.created_at).getTime(),
       );
 
       // Log the sorted nodes
-      const convertedPosts = PostDataHelper(sortedPosts, userId)
+      const convertedPosts = PostDataHelper(sortedPosts, userId);
       console.log(convertedPosts);
 
       // Set the sorted nodes as posts
@@ -74,15 +84,16 @@ export const useFetchFeed = (userId: string) => {
     }
   };
 
-  const fetchAuthToken=async()=>{
-    const { data: { session } } = await supabase.auth.getSession()
+  const fetchAuthToken = async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     const idToken = session?.access_token || "";
     setIdToken(idToken);
-   
-  }
+  };
   useEffect(() => {
     fetchAuthToken();
   }, [userId]);
 
-  return { fetchFeed ,posts, loading, error };
+  return { fetchFeed, posts, loading, error };
 };
