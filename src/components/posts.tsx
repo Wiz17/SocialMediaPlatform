@@ -1,19 +1,19 @@
 import React from "react";
-import { HeartOutlined, HeartFilled } from '@ant-design/icons'
+import { HeartOutlined, HeartFilled } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import { fetchMutationGraphQL } from "../graphql/fetcherMutation.tsx";
 import { LIKED_POSTS_HANDLE } from "../graphql/queries.tsx";
 import { LIKE_HANDLER } from "../graphql/queries.tsx";
 import { ADD_LIKE, REMOVE_LIKE } from "../graphql/queries/likes.ts";
-import { toast } from "sonner"
-import { MessageCircle } from "lucide-react"
+import { toast } from "sonner";
+import { MessageCircle } from "lucide-react";
 import { requestMaker } from "../graphql/requestMaker.ts";
 import { supabase } from "../supabaseClient.jsx";
 
 interface PostCardProps {
   id: string;
   name: string;
-  userImg: string
+  userImg: string;
   content: string;
   timeAgo: string;
   postImg: string;
@@ -38,7 +38,6 @@ const PostCard: React.FC<PostCardProps> = ({
   // dataArr,
   // dataArrSetState
 }) => {
-
   const userId: string = localStorage.getItem("id") || "";
   const [likeBtn, setLikeBtn] = useState<boolean>(liked);
   const [likeCount, setLikeCount] = useState<number>(Number(likes) || 0); // Convert to number initially
@@ -47,42 +46,42 @@ const PostCard: React.FC<PostCardProps> = ({
     setLikeBtn(false);
     const likeTemp = likeCount - 1; // Process as number
     setLikeCount(likeTemp);
-    const { data: { session } } = await supabase.auth.getSession()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     const idToken = session?.access_token || "";
-    console.log(idToken)
+    console.log(idToken);
 
     try {
-
-      await requestMaker(REMOVE_LIKE, idToken, { user_id: userId, post_id: id }); // Pass as string
+      await requestMaker(REMOVE_LIKE, idToken, {
+        user_id: userId,
+        post_id: id,
+      }); // Pass as string
+    } catch {
+      toast.error("failed to dislike post.");
     }
-    catch {
-      toast.error("failed to dislike post.")
-    }
-
   };
 
   const likeHandle = async (id: string) => {
-
     setLikeBtn(true);
     const likeTemp = likeCount + 1; // Process as number
     setLikeCount(likeTemp);
     // const temp = [...(dataArr || []), id];
     // dataArrSetState(temp);
 
-    const { data: { session } } = await supabase.auth.getSession()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     const idToken = session?.access_token || "";
-    console.log(idToken)
+    console.log(idToken);
 
     try {
       // await fetchMutationGraphQL(ADD_LIKE, { user_id: userId, post_id: id }); // Pass as string
       await requestMaker(ADD_LIKE, idToken, { user_id: userId, post_id: id }); // Pass as string
-
     } catch {
-      toast.error('Failed to like a post');
+      toast.error("Failed to like a post");
     }
-
   };
-
 
   return (
     <>
@@ -105,19 +104,44 @@ const PostCard: React.FC<PostCardProps> = ({
           <p className="text-white -mt-2">{content}</p>
           <div className="w-full">
             {postImg && (
-              <img
-                src={postImg}
-                alt="Post"
-                className="w-full object-cover rounded-lg"
-              />
+              <>
+                {postImg.endsWith(".mp4") ? (
+                  <video
+                    src={postImg}
+                    className="w-full object-contain rounded-lg h-[400px]"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    controls
+                    preload="metadata"
+                  />
+                ) : (
+                  <img
+                    src={postImg}
+                    alt="Post"
+                    className="w-full object-cover rounded-lg"
+                  />
+                )}
+              </>
             )}
           </div>
           <div className="flex gap-3">
-
-            {likeBtn ? <HeartFilled style={{ color: 'red', fontSize: '25px' }} onClick={() => disLikeHandle(id)} /> :
-              <HeartOutlined style={{ color: 'white', fontSize: '25px' }} onClick={() => likeHandle(id)} />}
+            {likeBtn ? (
+              <HeartFilled
+                style={{ color: "red", fontSize: "25px" }}
+                onClick={() => disLikeHandle(id)}
+              />
+            ) : (
+              <HeartOutlined
+                style={{ color: "white", fontSize: "25px" }}
+                onClick={() => likeHandle(id)}
+              />
+            )}
             {/* <div className="text-gray-50 ml-2">{likes}</div> */}
-            <button><MessageCircle style={{ color: 'white', fontSize: '25px' }} /></button>
+            <button>
+              <MessageCircle style={{ color: "white", fontSize: "25px" }} />
+            </button>
           </div>
           <div>
             <p className="text-white">{likeCount} Likes</p>
