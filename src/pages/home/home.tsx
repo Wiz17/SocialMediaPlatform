@@ -39,6 +39,7 @@ const HomeFeedsPage = () => {
   const [file, setFile] = useState<File | null>(null);
   const [section, setSection] = useState(true);
   const [imgUrl, setImgUrl] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
   const [openMentionModal, setOpenMentionModal] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -72,13 +73,33 @@ const HomeFeedsPage = () => {
     setFile(null);
     setInputValue("");
     setImgUrl("");
+    setVideoUrl("");
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
 
-      setImgUrl(URL.createObjectURL(e.target.files[0]));
+      // Check file size (2MB = 2 * 1024 * 1024 bytes)
+      const maxSize = 3 * 1024 * 1024; // 2MB in bytes
+
+      if (selectedFile.size > maxSize) {
+        const fileSizeMB = (selectedFile.size / (1024 * 1024)).toFixed(2);
+        toast.error(
+          `File size is ${fileSizeMB}MB. Please select a file smaller than 3MB.`,
+        );
+        // Clear the input
+        e.target.value = "";
+        return;
+      }
+
+      setFile(selectedFile);
+
+      if (selectedFile.type.startsWith("image/")) {
+        setImgUrl(URL.createObjectURL(selectedFile));
+      } else if (selectedFile.type.startsWith("video/")) {
+        setVideoUrl(URL.createObjectURL(selectedFile));
+      }
     }
   };
 
@@ -107,6 +128,7 @@ const HomeFeedsPage = () => {
     <>
       <div className="bg-black flex">
         <div className="max-sm:hidden w-[15%]">.</div>
+
         <LeftNav />
         <section className="w-full sm:w-[85%] lg:w-[50%] border-r border-r-gray-700 min-h-screen max-sm:pb-10">
           <div className="flex text-white justify-around items-center border-b border-b-gray-700">
@@ -155,23 +177,43 @@ const HomeFeedsPage = () => {
                   </div>
 
                   <div className="relative">
-                    <img src={imgUrl} className="w-full object-cover" />
+                    {videoUrl && (
+                      <>
+                        <video
+                          src={videoUrl}
+                          className="w-full object-contains rounded-lg"
+                          controls
+                          preload="metadata"
+                          style={{ height: "400px" }}
+                          // Optional: limit video height
+                        ></video>
+                        <button
+                          onClick={() => setVideoUrl("")}
+                          className="absolute -top-2 -right-2 bg-gray-900 text-white p-2 rounded-full"
+                        >
+                          <X />
+                        </button>
+                      </>
+                    )}
                     {imgUrl && (
-                      <button
-                        className="absolute -top-2 -right-2 bg-gray-900 text-white p-2 rounded-full"
-                        onClick={() => setImgUrl("")}
-                      >
-                        <X />
-                      </button>
+                      <>
+                        <img src={imgUrl} className="w-full object-cover" />
+                        <button
+                          className="absolute -top-2 -right-2 bg-gray-900 text-white p-2 rounded-full"
+                          onClick={() => setImgUrl("")}
+                        >
+                          <X />
+                        </button>
+                      </>
                     )}
                   </div>
-
                   <div className="flex justify-between items-center">
                     <label className="cursor-pointer">
                       <input
                         type="file"
+                        accept="image/*,video/*"
                         onChange={handleFileChange}
-                        className="hidden" // Hide the input but keep it functional
+                        className="hidden"
                       />
                       <CameraSvg />
                     </label>

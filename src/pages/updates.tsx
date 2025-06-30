@@ -35,7 +35,7 @@ const Updates = () => {
       icon: FileText,
       title: "Post Creation",
       description:
-        "Share your thoughts with text posts and optional image attachments",
+        "Share your thoughts with text posts and optional image & video attachments",
     },
     {
       icon: Heart,
