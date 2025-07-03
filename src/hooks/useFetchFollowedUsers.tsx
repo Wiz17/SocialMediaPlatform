@@ -1,41 +1,27 @@
 import { useState } from "react";
 import { supabase } from "../supabaseClient.jsx";
-
-interface User {
-  follwersIdPk:string;
-  followed_id: string;
-  username: string;
-  profile_picture: string;
-  tag_name: string;
-}
-
-interface FollowerRecord {
-  created_at: string;
-  follower_id: string;
-  users: User;
-}
-
-interface UseFetchFollowedUsersReturn {
-  fetchFollowedUsers: () => Promise<void>;
-  users2: User[];
-  loading5: boolean;
-  error5: string | null;
-}
-
-export const useFetchFollowedUsers = (userId: string): UseFetchFollowedUsersReturn => {
-  const [users2, setUsers] = useState<User[]>([]); // Properly typed users array
-  const [loading5, setLoading] = useState<boolean>(false); // Changed to false initially
+import {
+  UseFetchFollowedUsersReturn,
+  User,
+  DatabaseFollowerRecord,
+} from "../types/home.js";
+export const useFetchFollowedUsers = (
+  userId: string,
+): UseFetchFollowedUsersReturn => {
+  const [users2, setUsers] = useState<User[]>([]);
+  const [loading5, setLoading] = useState<boolean>(false);
   const [error5, setError] = useState<string | null>(null);
 
   const fetchFollowedUsers = async (): Promise<void> => {
     try {
       setLoading(true);
       setError(null);
-      
-      // Fetch followed users
+
+      // Fetch followed users with proper typing
       const { data: followers, error } = await supabase
-        .from('followers')
-        .select(`
+        .from("followers")
+        .select(
+          `
           id,
           created_at,
           follower_id,
@@ -45,8 +31,9 @@ export const useFetchFollowedUsers = (userId: string): UseFetchFollowedUsersRetu
             tag_name,
             profile_picture
           )
-        `)
-        .eq('follower_id', userId);
+        `,
+        )
+        .eq("follower_id", userId);
 
       console.log(followers);
 
@@ -55,21 +42,31 @@ export const useFetchFollowedUsers = (userId: string): UseFetchFollowedUsersRetu
         return;
       }
 
-      // Type-safe mapping with null checks
-      const fetchedFollowedUsersData: User[] = (followers || [])
-        .filter((follower: any) => follower.users !== null)
-        .map((follower: any) => ({
-          follwersIdPk:follower.id,
-          followed_id:follower.users.id,
-          username:follower.users.username,
-          tag_name:follower.users.tag_name,
-          profile_picture:follower.users.profile_picture,
-        }));
+      // Cast the data to our expected type
+      const typedFollowers = followers as unknown as
+        | DatabaseFollowerRecord[]
+        | null;
 
-        console.log(fetchedFollowedUsersData)
+      // Type-safe mapping with null checks
+      const fetchedFollowedUsersData: User[] = (typedFollowers || [])
+        .filter((follower: DatabaseFollowerRecord) => follower.users !== null)
+        .map(
+          (follower: DatabaseFollowerRecord): User => ({
+            followersIdPk: follower.id, // Fixed typo
+            followed_id: follower.users.id,
+            username: follower.users.username,
+            tag_name: follower.users.tag_name,
+            profile_picture: follower.users.profile_picture,
+          }),
+        );
+
+      console.log(fetchedFollowedUsersData);
       setUsers(fetchedFollowedUsersData);
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "An error occurred while fetching users.";
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "An error occurred while fetching users.";
       setError(errorMessage);
     } finally {
       setLoading(false);

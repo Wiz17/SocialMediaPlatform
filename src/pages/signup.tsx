@@ -25,24 +25,20 @@ const Signup: React.FC = () => {
     if (error) {
       setError(error.message);
     } else {
-      setSuccessMessage("Signup successful! Check your email for confirmation.");
+      setSuccessMessage(
+        "Signup successful! Check your email for confirmation.",
+      );
       console.log("Signup successful!", data);
       if (data.user) {
         localStorage.setItem("id", data.user.id || "");
         localStorage.setItem("email", data.user.email || "");
-        navigate("/create-user")
+        navigate("/create-user");
       } else {
         console.error("User data is null.");
       }
     }
   };
-  if(userId){
-    return(
-        <>
-        <h1>Can't access this page!!</h1>
-        </>
-    )
-  }
+
   return (
     <div className="h-screen flex">
       <div className="flex items-center justify-center h-screen bg-black w-full">

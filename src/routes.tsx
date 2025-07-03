@@ -1,23 +1,59 @@
 import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import Home from "./pages/home/home.tsx"; // Assuming you have Home.tsx
-import Notifications from "./pages/notifications.tsx";
-import Login from "./pages/login.tsx";
-import Signup from "./pages/signup.tsx";
-import CreateUser from "./pages/createUser.tsx";
-import Updates from "./pages/updates.tsx";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+} from "react-router-dom";
+import PrivateRoutes from "./privateRoutes.ts";
+import PublicRoutes from "./publicRoutes.ts";
+
+// Component to protect private routes
+const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const userId = localStorage.getItem("id");
+  return userId ? <>{children}</> : <Navigate to="/login" replace />;
+};
+
+// Component to protect public routes (redirect authenticated users)
+const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const userId = localStorage.getItem("id");
+  return !userId ? <>{children}</> : <Navigate to="/" replace />;
+};
 
 const RoutesComponent: React.FC = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/notifications" element={<Notifications />} />
-        <Route path="/updates" element={<Updates />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/create-user" element={<CreateUser />} />
-        {/* <Route path="*" element={<NotFound />} /> */}
+        {/* Private Routes - Only accessible when user is logged in */}
+        {PrivateRoutes.map((route) => (
+          <Route
+            key={route.path}
+            path={route.path}
+            element={
+              <PrivateRoute>
+                <route.component />
+              </PrivateRoute>
+            }
+          />
+        ))}
+
+        {/* Public Routes - Only accessible when user is not logged in */}
+        {PublicRoutes.map((route) => (
+          <Route
+            key={route.path}
+            path={route.path}
+            element={
+              <PublicRoute>
+                <route.component />
+              </PublicRoute>
+            }
+          />
+        ))}
+
+        {/* Fallback route */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

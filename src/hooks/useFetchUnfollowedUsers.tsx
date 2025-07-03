@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { supabase } from "../supabaseClient.jsx";
+import { DatabaseUser } from "../types/home.js";
 
 export const useFetchUnfollowedUsers = (userId: string) => {
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<DatabaseUser[]>([]);
   const [loading1, setLoading] = useState<boolean>(false);
   const [error1, setError] = useState<string | null>(null);
 
@@ -24,7 +25,8 @@ export const useFetchUnfollowedUsers = (userId: string) => {
         );
       }
 
-      const followedIds = followedUsers?.map((f) => f.followed_id) || [];
+      const followedIds =
+        followedUsers?.map((f: { followed_id: string }) => f.followed_id) || [];
 
       // Get all users with pagination
       const { data: allUsers, error: usersError } = await supabase
@@ -45,29 +47,31 @@ export const useFetchUnfollowedUsers = (userId: string) => {
         throw new Error(`Error fetching users: ${usersError.message}`);
       }
 
-      console.log(allUsers);
       // Filter out followed users on the client side
       const unfollowedUsers =
-        allUsers?.filter((user) => !followedIds.includes(user.id)) || [];
-
-      console.log("Unfollowed users:", unfollowedUsers);
+        allUsers?.filter(
+          (user: DatabaseUser) => !followedIds.includes(user.id),
+        ) || [];
 
       // Either append to existing users or replace them
       if (append && page > 0) {
-        setUsers((prevUsers) => {
+        setUsers((prevUsers: DatabaseUser[]): DatabaseUser[] => {
           // Filter out duplicates
-          const existingIds = prevUsers.map((user) => user.id);
+          const existingIds = prevUsers.map((user: DatabaseUser) => user.id);
           const newUsers = unfollowedUsers.filter(
-            (user) => !existingIds.includes(user.id),
+            (user: DatabaseUser) => !existingIds.includes(user.id),
           );
           return [...prevUsers, ...newUsers];
         });
       } else {
         setUsers(unfollowedUsers);
       }
-    } catch (err: any) {
-      setError(err.message || "An error occurred while fetching users.");
-      console.error("Error fetching unfollowed users:", err);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || "An error occurred while fetching users.");
+      } else {
+        setError("An unexpected error occurred.");
+      }
     } finally {
       setLoading(false);
     }
