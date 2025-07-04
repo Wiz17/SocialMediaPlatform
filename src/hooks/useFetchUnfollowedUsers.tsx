@@ -11,7 +11,6 @@ export const useFetchUnfollowedUsers = (userId: string) => {
     try {
       setError(null);
       setLoading(true);
-      const offset = page * limit;
 
       // First get the list of followed user IDs
       const { data: followedUsers, error: followedError } = await supabase
@@ -28,8 +27,11 @@ export const useFetchUnfollowedUsers = (userId: string) => {
       const followedIds =
         followedUsers?.map((f: { followed_id: string }) => f.followed_id) || [];
 
-      // Get all users with pagination
-      const { data: allUsers, error: usersError } = await supabase
+      // For pagination, we need to calculate offset based on the actual limit, not fetchLimit
+      const offset = page * limit;
+
+      // Get users with proper pagination
+      let query = supabase
         .from("users")
         .select(
           `
@@ -40,18 +42,24 @@ export const useFetchUnfollowedUsers = (userId: string) => {
         `,
         )
         .neq("id", userId) // Exclude current user
-        .range(offset, offset + limit - 1)
         .order("created_at", { ascending: false });
+
+      // Only apply the NOT IN filter if there are followed users
+      if (followedIds.length > 0) {
+        query = query.not("id", "in", `(${followedIds.join(",")})`);
+      }
+
+      // Apply pagination
+      const { data: allUsers, error: usersError } = await query.range(
+        offset,
+        offset + limit - 1,
+      );
 
       if (usersError) {
         throw new Error(`Error fetching users: ${usersError.message}`);
       }
 
-      // Filter out followed users on the client side
-      const unfollowedUsers =
-        allUsers?.filter(
-          (user: DatabaseUser) => !followedIds.includes(user.id),
-        ) || [];
+      const unfollowedUsers = allUsers || [];
 
       // Either append to existing users or replace them
       if (append && page > 0) {

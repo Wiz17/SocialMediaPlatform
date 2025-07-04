@@ -20,11 +20,11 @@ import DetectMentionInPost from "../../helper/detect-mention-in-post.ts";
 import MentionSuggestionModal from "../../components/mentionSuggestionModal.tsx";
 import useMentionSuggestor from "../../hooks/useMentionSuggestor.ts";
 
-//github branch issue resolved
-
 const HomeFeedsPage = () => {
   const userId: string = localStorage.getItem("id") || "";
   const { fetchFeed, posts, loading, error } = useFetchFeed(userId);
+
+  console.log(posts, loading);
   const { addPost, loading2, error2: errorInPosting } = useAddPost();
   const { uploadFile, uploading, error3: uploadingError } = useFileUploader();
   const { fetchFollowedUsers, users2, loading5, error5 } =
@@ -42,11 +42,6 @@ const HomeFeedsPage = () => {
   const [videoUrl, setVideoUrl] = useState("");
   const [openMentionModal, setOpenMentionModal] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    fetchFeed();
-    fetchFollowedUsers();
-  }, []);
 
   const formSubmitHandle = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -238,7 +233,7 @@ const HomeFeedsPage = () => {
                 onRetry={() => fetchFeed()}
                 loader={<PostFeedSuspence repeat={5} />}
               >
-                {posts.length === 0 ? ( // Check if the users array is empty
+                {posts?.length === 0 ? ( // Check if the users array is empty
                   <div className="text-center py-8">
                     <h1 className="text-white text-4xl font-light mb-4 tracking-wide">
                       Follow to see{" "}
@@ -263,7 +258,7 @@ const HomeFeedsPage = () => {
                   </div>
                 ) : (
                   <div className="p-4">
-                    {posts.map((data) => {
+                    {posts?.map((data) => {
                       const timeAgo = CalculateTimeAgo(data.created_at);
                       // console.log(data)
                       return (
@@ -289,18 +284,18 @@ const HomeFeedsPage = () => {
             </>
           ) : (
             <>
-              {/* <FollowingTab
+              <FollowingTab
                 fetchFollowedUsers={fetchFollowedUsers}
                 users2={users2}
                 loading5={loading5}
                 error5={error5}
-              /> */}
+              />
             </>
           )}
         </section>
-        {/* <div className="w-[35%] max-lg:hidden">
+        <div className="w-[35%] max-lg:hidden">
           <FollowSuggestion />
-        </div> */}
+        </div>
       </div>
     </>
   );

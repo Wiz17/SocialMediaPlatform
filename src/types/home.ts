@@ -1,4 +1,3 @@
-// Database user interface (what comes from Supabase)
 //useFetchFollowedUsers hook
 interface DatabaseUser {
   id: string;
@@ -7,7 +6,6 @@ interface DatabaseUser {
   tag_name: string;
 }
 
-// Follower record from database
 interface DatabaseFollowerRecord {
   id: string;
   created_at: string;
@@ -15,7 +13,6 @@ interface DatabaseFollowerRecord {
   users: DatabaseUser;
 }
 
-// Transformed user interface (what we use in the component)
 interface User {
   followersIdPk: string; // Fixed typo: follwersIdPk -> followersIdPk
   followed_id: string;
@@ -26,14 +23,42 @@ interface User {
 
 interface UseFetchFollowedUsersReturn {
   fetchFollowedUsers: () => Promise<void>;
-  users2: User[];
+  users2: User[] | undefined;
   loading5: boolean;
   error5: string | null;
 }
+
+//useFetchFee hook
+
+type PostData = {
+  node: {
+    content: string;
+    created_at: string;
+    id: string;
+    image: string;
+    likes: number;
+    likes2Collection: {
+      edges: [
+        {
+          node: {
+            user_id: string;
+            like_id: string;
+          };
+        },
+      ];
+    };
+    users: {
+      profile_picture: string;
+      tag_name: string;
+      username: string;
+    };
+  };
+};
 
 export {
   DatabaseUser,
   DatabaseFollowerRecord,
   UseFetchFollowedUsersReturn,
   User,
+  PostData,
 };
