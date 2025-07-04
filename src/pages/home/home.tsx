@@ -20,11 +20,11 @@ import DetectMentionInPost from "../../helper/detect-mention-in-post.ts";
 import MentionSuggestionModal from "../../components/mentionSuggestionModal.tsx";
 import useMentionSuggestor from "../../hooks/useMentionSuggestor.ts";
 
-//github branch issue resolved
-
 const HomeFeedsPage = () => {
   const userId: string = localStorage.getItem("id") || "";
   const { fetchFeed, posts, loading, error } = useFetchFeed(userId);
+
+  console.log(posts, loading);
   const { addPost, loading2, error2: errorInPosting } = useAddPost();
   const { uploadFile, uploading, error3: uploadingError } = useFileUploader();
   const { fetchFollowedUsers, users2, loading5, error5 } =
@@ -42,11 +42,6 @@ const HomeFeedsPage = () => {
   const [videoUrl, setVideoUrl] = useState("");
   const [openMentionModal, setOpenMentionModal] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    fetchFeed();
-    fetchFollowedUsers();
-  }, []);
 
   const formSubmitHandle = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -230,9 +225,7 @@ const HomeFeedsPage = () => {
                   </div>
                 </form>
               </div>
-              <div className="lg:hidden p-4">
-                <FollowSuggestion />
-              </div>
+              <div className="lg:hidden p-4">{/* <FollowSuggestion /> */}</div>
 
               <SectionWrapper
                 loading={loading}
@@ -240,7 +233,7 @@ const HomeFeedsPage = () => {
                 onRetry={() => fetchFeed()}
                 loader={<PostFeedSuspence repeat={5} />}
               >
-                {posts.length === 0 ? ( // Check if the users array is empty
+                {posts?.length === 0 ? ( // Check if the users array is empty
                   <div className="text-center py-8">
                     <h1 className="text-white text-4xl font-light mb-4 tracking-wide">
                       Follow to see{" "}
@@ -265,7 +258,7 @@ const HomeFeedsPage = () => {
                   </div>
                 ) : (
                   <div className="p-4">
-                    {posts.map((data) => {
+                    {posts?.map((data) => {
                       const timeAgo = CalculateTimeAgo(data.created_at);
                       // console.log(data)
                       return (
@@ -308,39 +301,8 @@ const HomeFeedsPage = () => {
   );
 };
 
-const NoUseridPageHandle = () => {
-  return (
-    <>
-      <div className="h-screen flex items-center justify-center bg-gradient-to-r bg-black ">
-        <div className="text-center bg-gray-800 rounded-lg shadow-lg p-8 max-w-sm">
-          <h1 className="text-2xl font-bold text-gray-100 mb-4">
-            Please Login to Continue!
-          </h1>
-          <p className="text-gray-100 mb-6">
-            You need to log in to access this page. If you don’t have an
-            account, sign up now!
-          </p>
-          <div className="flex justify-center gap-4">
-            <Link to="/login">
-              <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg">
-                Login
-              </button>
-            </Link>
-            <Link to="/signup">
-              <button className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg">
-                Sign Up
-              </button>
-            </Link>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-};
-
 const Home: React.FC = () => {
-  const userId: string = localStorage.getItem("id") || "";
-  return userId ? <HomeFeedsPage /> : <NoUseridPageHandle />;
+  return <HomeFeedsPage />;
 };
 
 export default Home;

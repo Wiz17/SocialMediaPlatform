@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { supabase } from "../supabaseClient.jsx";
+import { DatabaseUser } from "../types/home.js";
 
 export const useFetchUnfollowedUsers = (userId: string) => {
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<DatabaseUser[]>([]);
   const [loading1, setLoading] = useState<boolean>(false);
   const [error1, setError] = useState<string | null>(null);
 
@@ -10,7 +11,6 @@ export const useFetchUnfollowedUsers = (userId: string) => {
     try {
       setError(null);
       setLoading(true);
-      const offset = page * limit;
 
       // First get the list of followed user IDs
       const { data: followedUsers, error: followedError } = await supabase
@@ -24,10 +24,14 @@ export const useFetchUnfollowedUsers = (userId: string) => {
         );
       }
 
-      const followedIds = followedUsers?.map((f) => f.followed_id) || [];
+      const followedIds =
+        followedUsers?.map((f: { followed_id: string }) => f.followed_id) || [];
 
-      // Get all users with pagination
-      const { data: allUsers, error: usersError } = await supabase
+      // For pagination, we need to calculate offset based on the actual limit, not fetchLimit
+      const offset = page * limit;
+
+      // Get users with proper pagination
+      let query = supabase
         .from("users")
         .select(
           `
@@ -38,36 +42,44 @@ export const useFetchUnfollowedUsers = (userId: string) => {
         `,
         )
         .neq("id", userId) // Exclude current user
-        .range(offset, offset + limit - 1)
         .order("created_at", { ascending: false });
+
+      // Only apply the NOT IN filter if there are followed users
+      if (followedIds.length > 0) {
+        query = query.not("id", "in", `(${followedIds.join(",")})`);
+      }
+
+      // Apply pagination
+      const { data: allUsers, error: usersError } = await query.range(
+        offset,
+        offset + limit - 1,
+      );
 
       if (usersError) {
         throw new Error(`Error fetching users: ${usersError.message}`);
       }
 
-      console.log(allUsers);
-      // Filter out followed users on the client side
-      const unfollowedUsers =
-        allUsers?.filter((user) => !followedIds.includes(user.id)) || [];
-
-      console.log("Unfollowed users:", unfollowedUsers);
+      const unfollowedUsers = allUsers || [];
 
       // Either append to existing users or replace them
       if (append && page > 0) {
-        setUsers((prevUsers) => {
+        setUsers((prevUsers: DatabaseUser[]): DatabaseUser[] => {
           // Filter out duplicates
-          const existingIds = prevUsers.map((user) => user.id);
+          const existingIds = prevUsers.map((user: DatabaseUser) => user.id);
           const newUsers = unfollowedUsers.filter(
-            (user) => !existingIds.includes(user.id),
+            (user: DatabaseUser) => !existingIds.includes(user.id),
           );
           return [...prevUsers, ...newUsers];
         });
       } else {
         setUsers(unfollowedUsers);
       }
-    } catch (err: any) {
-      setError(err.message || "An error occurred while fetching users.");
-      console.error("Error fetching unfollowed users:", err);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || "An error occurred while fetching users.");
+      } else {
+        setError("An unexpected error occurred.");
+      }
     } finally {
       setLoading(false);
     }

@@ -102,8 +102,8 @@ const PostCard: React.FC<PostCardProps> = ({
             <p className="text-gray-500 ml-3">{timeAgo}</p>
           </div>
           <p className="text-white -mt-2">{content}</p>
-          <div className="w-full">
-            {postImg && (
+          {postImg && (
+            <div className="w-full border border-gray-700 rounded-lg">
               <>
                 {postImg.endsWith(".mp4") ? (
                   <video
@@ -124,8 +124,8 @@ const PostCard: React.FC<PostCardProps> = ({
                   />
                 )}
               </>
-            )}
-          </div>
+            </div>
+          )}
           <div className="flex gap-3">
             {likeBtn ? (
               <HeartFilled
