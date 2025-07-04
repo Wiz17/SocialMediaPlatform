@@ -225,7 +225,9 @@ const HomeFeedsPage = () => {
                   </div>
                 </form>
               </div>
-              <div className="lg:hidden p-4">{/* <FollowSuggestion /> */}</div>
+              <div className="lg:hidden p-4">
+                <FollowSuggestion />{" "}
+              </div>
 
               <SectionWrapper
                 loading={loading}
