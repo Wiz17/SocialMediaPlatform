@@ -43,7 +43,7 @@ const CreateUser: React.FC = () => {
 
       // Prepare GraphQL variables
       const variables = {
-        id: localStorage.getItem("id"),
+        id: localStorage.getItem("user_id_create_user"),
         email: localStorage.getItem("email"),
         profile_picture: profilePhotoUrl,
         username,

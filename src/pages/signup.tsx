@@ -3,7 +3,6 @@ import { supabase } from "../supabaseClient";
 import { Link, useNavigate } from "react-router-dom";
 import LeftUiPublicPages from "../components/publicFoldersUI/leftUiPublicPages.tsx";
 const Signup: React.FC = () => {
-  const userId: string = localStorage.getItem("id") || "";
   const [email, setEmail] = useState<string>(""); // Email state
   const [password, setPassword] = useState<string>(""); // Password state
   const [error, setError] = useState<string | null>(null); // Error state
@@ -29,13 +28,11 @@ const Signup: React.FC = () => {
       setSuccessMessage(
         "Signup successful! Check your email for confirmation.",
       );
-      console.log("Signup successful!", data);
+
       if (data.user) {
-        localStorage.setItem("id", data.user.id || "");
+        localStorage.setItem("user_id_create_user", data.user.id || "");
         localStorage.setItem("email", data.user.email || "");
-        navigate("/create-user");
-      } else {
-        console.error("User data is null.");
+        navigate("/createuser");
       }
     }
   };
@@ -154,16 +151,16 @@ const Signup: React.FC = () => {
               />
               <label htmlFor="terms" className="ml-2 text-sm text-gray-400">
                 I agree to the{" "}
-                <a href="/terms" className="text-blue-400 hover:text-blue-300">
+                <Link to="/terms" className="text-blue-400 hover:text-blue-300">
                   Terms of Service
-                </a>{" "}
+                </Link>{" "}
                 and{" "}
-                <a
-                  href="/privacy"
+                <Link
+                  to="/privacy"
                   className="text-blue-400 hover:text-blue-300"
                 >
                   Privacy Policy
-                </a>
+                </Link>
               </label>
             </div>
 
@@ -194,12 +191,12 @@ const Signup: React.FC = () => {
           <div className="mt-8 text-center">
             <p className="text-gray-400 text-sm">
               Already have an account?{" "}
-              <a
-                href="/login"
+              <Link
+                to="/login"
                 className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
               >
                 Sign in
-              </a>
+              </Link>
             </p>
           </div>
 
