@@ -31,6 +31,7 @@ interface UseFetchFollowedUsersReturn {
 //useFetchFee hook
 
 type PostData = {
+  postId: any;
   node: {
     content: string;
     created_at: string;
