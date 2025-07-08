@@ -24,11 +24,13 @@ query FetchUserById($userId: String!) {
   }
 }
 `;
+
 export const FETCH_POSTS = `
   query FetchPosts {
     postsCollection(
       filter: { user_id: { in: userIds } }
-     
+      first: limit
+      orderBy: { created_at: DescNullsLast }
     ) {
       edges {
         node {
@@ -55,7 +57,6 @@ export const FETCH_POSTS = `
     }
   }
 `;
-
 export const FETCH_ALL_USERS = `
 query FetchAllUsers {
     usersCollection {
@@ -205,7 +206,6 @@ query FetchLikedPostList($userId: String!) {
 }
 
 `;
-
 
 export const LIKE_HANDLER = `
 mutation DecrLikePostList($postId: String!, $postLikes: numeric!) {

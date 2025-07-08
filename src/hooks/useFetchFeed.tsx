@@ -7,7 +7,11 @@ import { requestMaker } from "../graphql/requestMaker.ts";
 import { PostData } from "../types/home.ts";
 
 // Separate function to fetch the feed data
-const fetchFeedData = async (userId: string, idToken: string) => {
+const fetchFeedData = async (
+  userId: string,
+  idToken: string,
+  limit: number = 6,
+) => {
   if (!idToken) {
     throw new Error("No authentication token available");
   }
@@ -22,9 +26,12 @@ const fetchFeedData = async (userId: string, idToken: string) => {
     (edge: any) => edge.node.followed_id,
   );
 
-  // Step 2: Fetch posts from followed users
+  // Step 2: Fetch posts from followed users with limit
   const postsData = await requestMaker(
-    FETCH_POSTS.replace("userIds", JSON.stringify(followedIds)),
+    FETCH_POSTS.replace("userIds", JSON.stringify(followedIds)).replace(
+      "limit",
+      limit.toString(),
+    ),
     idToken,
   );
 
@@ -35,15 +42,12 @@ const fetchFeedData = async (userId: string, idToken: string) => {
     return [];
   }
 
-  // Sort the posts by `created_at` in descending order
-  const sortedPosts: PostData[] = postsData.postsCollection.edges.sort(
-    (a: any, b: any) =>
-      new Date(b.node.created_at).getTime() -
-      new Date(a.node.created_at).getTime(),
-  );
-
+  // Posts are already sorted by created_at DESC from the server
   // Convert and return the posts
-  const convertedPosts = PostDataHelper(sortedPosts, userId);
+  const convertedPosts = PostDataHelper(
+    postsData.postsCollection.edges,
+    userId,
+  );
   console.log(convertedPosts);
 
   return convertedPosts;
@@ -70,16 +74,22 @@ const useAuthToken = () => {
 
 export const useFetchFeed = (userId: string) => {
   const idToken = useAuthToken();
+  // Initial limit of 6 posts, will be increased when loading more
+  const [postsLimit, setPostsLimit] = useState<number>(6);
+  // Store all posts - newest first (sorted by created_at DESC from the server)
+  const [allPosts, setAllPosts] = useState<any[]>([]);
+  // Track if there are more posts to load
+  const [hasMore, setHasMore] = useState<boolean>(true);
 
   const {
     data: posts,
     isLoading: loading,
     error,
-    refetch: fetchFeed,
+    refetch: refetchFeed,
     isRefetching,
   } = useQuery({
-    queryKey: ["feed", userId], // Cache key - will cache per user
-    queryFn: () => fetchFeedData(userId, idToken),
+    queryKey: ["feed", userId, postsLimit], // Cache key - will cache per user and limit
+    queryFn: () => fetchFeedData(userId, idToken, postsLimit),
     enabled: !!userId && !!idToken, // Only run when we have both userId and token
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
@@ -89,13 +99,34 @@ export const useFetchFeed = (userId: string) => {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 
+  // Update allPosts when posts data changes
+  useEffect(() => {
+    if (posts) {
+      setAllPosts(posts);
+      // If we got fewer posts than requested, there are no more posts to load
+      setHasMore(posts.length >= postsLimit);
+    }
+  }, [posts, postsLimit]);
+
+  // Function to load more posts (older posts will be appended to the list)
+  const loadMore = () => {
+    setPostsLimit((prevLimit) => prevLimit + 6); // Increase limit by 6 to load older posts
+  };
+
+  // Function to refresh feed with current limit
+  const fetchFeed = () => {
+    return refetchFeed();
+  };
+
   // Convert error to string format to match original hook
   const errorMessage = error instanceof Error ? error.message : null;
 
   return {
     fetchFeed, // Manual refetch function
-    posts,
+    loadMore, // Function to load more posts
+    posts: allPosts,
     loading: loading || isRefetching,
     error: errorMessage,
+    hasMore, // Boolean indicating if there are more posts to load
   };
 };

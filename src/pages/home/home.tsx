@@ -1,6 +1,5 @@
 //implement updates info tab.
-import React, { useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import React, { useRef } from "react";
 import PostCard from "../../components/posts.tsx";
 import { useFetchFeed } from "../../hooks/useFetchFeed.tsx";
 import { useFetchFollowedUsers } from "../../hooks/useFetchFollowedUsers.tsx";
@@ -19,12 +18,13 @@ import { toast } from "sonner";
 import DetectMentionInPost from "../../helper/detect-mention-in-post.ts";
 import MentionSuggestionModal from "../../components/mentionSuggestionModal.tsx";
 import useMentionSuggestor from "../../hooks/useMentionSuggestor.ts";
+import NoPostFoundUI from "./noPostFoundUI.tsx";
 
 const HomeFeedsPage = () => {
   const userId: string = localStorage.getItem("id") || "";
-  const { fetchFeed, posts, loading, error } = useFetchFeed(userId);
-
-  console.log(posts, loading);
+  const { fetchFeed, posts, loading, error, loadMore, hasMore } =
+    useFetchFeed(userId);
+  console.log(error);
   const { addPost, loading2, error2: errorInPosting } = useAddPost();
   const { uploadFile, uploading, error3: uploadingError } = useFileUploader();
   const { fetchFollowedUsers, users2, loading5, error5 } =
@@ -41,6 +41,7 @@ const HomeFeedsPage = () => {
   const [imgUrl, setImgUrl] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [openMentionModal, setOpenMentionModal] = useState(false);
+  const [showMorePosts, setShowMorePosts] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const formSubmitHandle = async (e: React.FormEvent) => {
@@ -117,6 +118,11 @@ const HomeFeedsPage = () => {
     const target = e.target as HTMLTextAreaElement;
     target.style.height = "auto";
     target.style.height = target.scrollHeight + "px";
+  };
+
+  const loadMorePost = () => {
+    setShowMorePosts(true);
+    loadMore();
   };
 
   return (
@@ -230,34 +236,19 @@ const HomeFeedsPage = () => {
               </div>
 
               <SectionWrapper
-                loading={loading}
+                loading={loading && !showMorePosts}
                 error={error ? true : false}
-                onRetry={() => fetchFeed()}
+                onRetry={() => {
+                  if (error === "JWT Expired") {
+                    window.location.reload(); // Reloads the whole app (forces re-auth)
+                  } else {
+                    fetchFeed(); // Retry fetch logic
+                  }
+                }}
                 loader={<PostFeedSuspence repeat={5} />}
               >
                 {posts?.length === 0 ? ( // Check if the users array is empty
-                  <div className="text-center py-8">
-                    <h1 className="text-white text-4xl font-light mb-4 tracking-wide">
-                      Follow to see{" "}
-                      <span className="font-bold text-blue-400 relative">
-                        feed
-                        <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-blue-400 rounded-full"></div>
-                      </span>
-                    </h1>
-                    <div className="flex justify-center">
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
-                        <div
-                          className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
-                          style={{ animationDelay: "0.1s" }}
-                        ></div>
-                        <div
-                          className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
-                          style={{ animationDelay: "0.2s" }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
+                  <NoPostFoundUI />
                 ) : (
                   <div className="p-4">
                     {posts?.map((data) => {
@@ -280,6 +271,19 @@ const HomeFeedsPage = () => {
                         />
                       );
                     })}
+
+                    {/* Load More Button - Shows older posts when clicked */}
+                    {hasMore && posts?.length > 0 && (
+                      <div className="flex justify-center mt-6 mb-4">
+                        <button
+                          onClick={() => loadMorePost()}
+                          className="bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 focus:outline-none font-bold disabled:bg-gray-400 disabled:cursor-not-allowed"
+                          disabled={loading}
+                        >
+                          {loading ? "Loading..." : "Load More Posts"}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </SectionWrapper>
