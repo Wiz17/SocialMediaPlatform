@@ -1,18 +1,17 @@
 import React from "react";
 import { HeartOutlined, HeartFilled } from "@ant-design/icons";
 import { useState, useEffect } from "react";
-import { fetchMutationGraphQL } from "../graphql/fetcherMutation.tsx";
-import { LIKED_POSTS_HANDLE } from "../graphql/queries.tsx";
-import { LIKE_HANDLER } from "../graphql/queries.tsx";
-import { ADD_LIKE, REMOVE_LIKE } from "../graphql/queries/likes.ts";
-import { toast } from "sonner";
 import { MessageCircle } from "lucide-react";
 import { requestMaker } from "../graphql/requestMaker.ts";
 import { supabase } from "../supabaseClient.jsx";
+import { ADD_LIKE, REMOVE_LIKE } from "../graphql/queries/likes.ts";
+import { toast } from "sonner";
+import { sendLikeNotification } from "../helper/notification-helper.ts";
 
 interface PostCardProps {
   id: string;
   name: string;
+  userId: string; // Add post owner's user ID
   userImg: string;
   content: string;
   timeAgo: string;
@@ -20,14 +19,12 @@ interface PostCardProps {
   tagName: string;
   likes: number;
   liked: boolean;
-  // dataArr: string[];
-  // dataArrSetState: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
-// Define the component
 const PostCard: React.FC<PostCardProps> = ({
   id,
   name,
+  userId: postOwnerId, // Post owner's ID
   userImg,
   content,
   timeAgo,
@@ -35,51 +32,122 @@ const PostCard: React.FC<PostCardProps> = ({
   tagName,
   likes,
   liked,
-  // dataArr,
-  // dataArrSetState
 }) => {
-  const userId: string = localStorage.getItem("id") || "";
+  const currentUserId: string = localStorage.getItem("id") || "";
   const [likeBtn, setLikeBtn] = useState<boolean>(liked);
-  const [likeCount, setLikeCount] = useState<number>(Number(likes) || 0); // Convert to number initially
+  const [likeCount, setLikeCount] = useState<number>(Number(likes) || 0);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
-  const disLikeHandle = async (id: string) => {
+  // Subscribe to real-time like updates for this post
+  useEffect(() => {
+    const channel = supabase
+      .channel(`post-likes:${id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "likes2",
+          filter: `post_id=eq.${id}`,
+        },
+        async (payload) => {
+          // Update like count based on database changes
+          if (payload.eventType === "INSERT") {
+            // Someone liked the post
+            if (payload.new.user_id !== currentUserId) {
+              setLikeCount((prev) => prev + 1);
+            }
+          } else if (payload.eventType === "DELETE") {
+            // Someone unliked the post
+            if (payload.old.user_id !== currentUserId) {
+              setLikeCount((prev) => Math.max(0, prev - 1));
+            }
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, currentUserId]);
+
+  const disLikeHandle = async (postId: string) => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+
+    // Optimistic update
     setLikeBtn(false);
-    const likeTemp = likeCount - 1; // Process as number
-    setLikeCount(likeTemp);
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const idToken = session?.access_token || "";
-    console.log(idToken);
+    setLikeCount((prev) => Math.max(0, prev - 1));
 
     try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const idToken = session?.access_token || "";
+
       await requestMaker(REMOVE_LIKE, idToken, {
-        user_id: userId,
-        post_id: id,
-      }); // Pass as string
-    } catch {
-      toast.error("failed to dislike post.");
+        user_id: currentUserId,
+        post_id: postId,
+      });
+
+      // Also update in Supabase directly for real-time sync
+      await supabase
+        .from("likes2")
+        .delete()
+        .eq("user_id", currentUserId)
+        .eq("post_id", postId);
+    } catch (error) {
+      // Revert on error
+      setLikeBtn(true);
+      setLikeCount((prev) => prev + 1);
+      toast.error("Failed to unlike post");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const likeHandle = async (id: string) => {
-    setLikeBtn(true);
-    const likeTemp = likeCount + 1; // Process as number
-    setLikeCount(likeTemp);
-    // const temp = [...(dataArr || []), id];
-    // dataArrSetState(temp);
+  const likeHandle = async (postId: string) => {
+    if (isProcessing) return;
+    setIsProcessing(true);
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const idToken = session?.access_token || "";
-    console.log(idToken);
+    // Optimistic update
+    setLikeBtn(true);
+    setLikeCount((prev) => prev + 1);
 
     try {
-      // await fetchMutationGraphQL(ADD_LIKE, { user_id: userId, post_id: id }); // Pass as string
-      await requestMaker(ADD_LIKE, idToken, { user_id: userId, post_id: id }); // Pass as string
-    } catch {
-      toast.error("Failed to like a post");
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const idToken = session?.access_token || "";
+
+      // Add like via GraphQL
+      await requestMaker(ADD_LIKE, idToken, {
+        user_id: currentUserId,
+        post_id: postId,
+      });
+
+      // Also insert into Supabase for real-time sync
+      const { data, error } = await supabase
+        .from("likes2")
+        .insert({
+          post_id: postId,
+          user_id: currentUserId,
+        })
+        .select()
+        .single();
+
+      if (!error && data) {
+        // Send notification to post owner
+        await sendLikeNotification(postId, currentUserId, postOwnerId);
+      }
+    } catch (error) {
+      // Revert on error
+      setLikeBtn(false);
+      setLikeCount((prev) => Math.max(0, prev - 1));
+      toast.error("Failed to like post");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -104,47 +172,52 @@ const PostCard: React.FC<PostCardProps> = ({
           <p className="text-white -mt-2">{content}</p>
           {postImg && (
             <div className="w-full border border-gray-700 rounded-lg">
-              <>
-                {postImg.endsWith(".mp4") ? (
-                  <video
-                    src={postImg}
-                    className="w-full object-contain rounded-lg h-[400px]"
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    controls
-                    preload="metadata"
-                  />
-                ) : (
-                  <img
-                    src={postImg}
-                    alt="Post"
-                    className="w-full object-cover rounded-lg"
-                  />
-                )}
-              </>
+              {postImg.endsWith(".mp4") ? (
+                <video
+                  src={postImg}
+                  className="w-full object-contain rounded-lg h-[400px]"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  controls
+                  preload="metadata"
+                />
+              ) : (
+                <img
+                  src={postImg}
+                  alt="Post"
+                  className="w-full object-cover rounded-lg"
+                />
+              )}
             </div>
           )}
           <div className="flex gap-3">
-            {likeBtn ? (
-              <HeartFilled
-                style={{ color: "red", fontSize: "25px" }}
-                onClick={() => disLikeHandle(id)}
-              />
-            ) : (
-              <HeartOutlined
-                style={{ color: "white", fontSize: "25px" }}
-                onClick={() => likeHandle(id)}
-              />
-            )}
-            {/* <div className="text-gray-50 ml-2">{likes}</div> */}
+            <button
+              onClick={() => (likeBtn ? disLikeHandle(id) : likeHandle(id))}
+              disabled={isProcessing}
+              className={`transition-all ${isProcessing ? "opacity-50" : ""}`}
+            >
+              {likeBtn ? (
+                <HeartFilled
+                  style={{ color: "red", fontSize: "25px" }}
+                  className={isProcessing ? "animate-pulse" : ""}
+                />
+              ) : (
+                <HeartOutlined
+                  style={{ color: "white", fontSize: "25px" }}
+                  className={isProcessing ? "animate-pulse" : ""}
+                />
+              )}
+            </button>
             <button>
               <MessageCircle style={{ color: "white", fontSize: "25px" }} />
             </button>
           </div>
           <div>
-            <p className="text-white">{likeCount} Likes</p>
+            <p className="text-white">
+              {likeCount} {likeCount === 1 ? "Like" : "Likes"}
+            </p>
           </div>
         </div>
       </div>
