@@ -1,5 +1,5 @@
 //implement updates info tab.
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import PostCard from "../../components/posts.tsx";
 import { useFetchFeed } from "../../hooks/useFetchFeed.tsx";
 import { useFetchFollowedUsers } from "../../hooks/useFetchFollowedUsers.tsx";
@@ -19,12 +19,14 @@ import DetectMentionInPost from "../../helper/detect-mention-in-post.ts";
 import MentionSuggestionModal from "../../components/mentionSuggestionModal.tsx";
 import useMentionSuggestor from "../../hooks/useMentionSuggestor.ts";
 import NoPostFoundUI from "./noPostFoundUI.tsx";
+import { expireToken } from "../../helper/expire-token.ts";
 
 const HomeFeedsPage = () => {
   const userId: string = localStorage.getItem("id") || "";
   const { fetchFeed, posts, loading, error, loadMore, hasMore } =
     useFetchFeed(userId);
-  console.log(error);
+
+  console.log(error, posts);
   const { addPost, loading2, error2: errorInPosting } = useAddPost();
   const { uploadFile, uploading, error3: uploadingError } = useFileUploader();
   const { fetchFollowedUsers, users2, loading5, error5 } =
@@ -35,6 +37,7 @@ const HomeFeedsPage = () => {
     error: error6,
     suggestions,
   } = useMentionSuggestor();
+
   const [inputValue, setInputValue] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [section, setSection] = useState(true);
@@ -239,11 +242,7 @@ const HomeFeedsPage = () => {
                 loading={loading && !showMorePosts}
                 error={error ? true : false}
                 onRetry={() => {
-                  if (error === "JWT Expired") {
-                    window.location.reload(); // Reloads the whole app (forces re-auth)
-                  } else {
-                    fetchFeed(); // Retry fetch logic
-                  }
+                  fetchFeed(); // Retry fetch logic
                 }}
                 loader={<PostFeedSuspence repeat={5} />}
               >
@@ -298,6 +297,8 @@ const HomeFeedsPage = () => {
               />
             </>
           )}
+
+          {/* <button onClick={()=>expireToken()} className="bg-red-500 text-white px-6 py-2 rounded-full hover:bg-red-600 focus:outline-none font-bold disabled:bg-gray-400 disabled:cursor-not-allowed">EXPIRE TOKEN</button> */}
         </section>
         <div className="w-[35%] max-lg:hidden">
           <FollowSuggestion />

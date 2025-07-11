@@ -27,8 +27,6 @@ const Login: React.FC = () => {
       setError(error.message);
     } else {
       setSuccessMessage("Login successful! Redirecting...");
-      console.log("Login successful!", data);
-
       localStorage.setItem("id", data.user.id || "");
       localStorage.setItem("email", data.user.email || "");
 
