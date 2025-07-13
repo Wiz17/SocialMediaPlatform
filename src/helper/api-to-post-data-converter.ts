@@ -1,33 +1,29 @@
 import { PostData } from "../types/home.ts";
-const PostDataHelper = (data: PostData[], userId: string) => {
-  console.log(data[0]);
-  console.log(data[0].node.likes2Collection);
-  console.log(data[0]?.node?.users);
 
-  const newData = data.map((data: PostData) => {
+const PostDataHelper = (data: any[], userId: string) => {
+  console.log(data[0]);
+  console.log(data[0]?.likes2);
+  console.log(data[0]?.users);
+
+  const newData = data.map((post: any) => {
     return {
-      content: data.node.content,
-      created_at: data.node.created_at,
-      id: data.node.id,
-      image: data.node.image,
-      likes: data.node.likes2Collection.edges.length,
+      content: post.content,
+      created_at: post.created_at,
+      id: post.postId || post.id,
+      image: post.image,
+      likes: post.likes2 ? post.likes2.length : 0,
       users: {
-        tag_name: data.node.users.tag_name,
-        username: data.node.users.username,
-        profile_picture: data.node.users.profile_picture,
+        tag_name: post.users?.tag_name || "",
+        username: post.users?.username || "",
+        profile_picture: post.users?.profile_picture || "",
       },
-      liked: data.node.likes2Collection.edges.find(
-        (edge: any) => edge.node.user_id === userId,
-      )
-        ? true
+      liked: post.likes2
+        ? post.likes2.some((like: any) => like.user_id === userId)
         : false,
     };
   });
+
   return newData;
 };
-//in newData keep only below keys
-//content , created_at,id,image,likes,users( into users keep tag_name, username,profile_picture),liked
-//now here calculate likes by length of likes2Collection.edges array length
-//calculate liked by traversing if user_id is present in likes2Collection.edges array or not
 
 export default PostDataHelper;

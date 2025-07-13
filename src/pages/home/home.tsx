@@ -259,6 +259,7 @@ const HomeFeedsPage = () => {
                           key={data.id}
                           id={data.id}
                           name={data.users.username}
+                          userId={userId}
                           userImg={data.users.profile_picture}
                           content={data.content}
                           timeAgo={timeAgo}
