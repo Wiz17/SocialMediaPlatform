@@ -16,7 +16,7 @@ const LeftUiPublicPages = () => {
           <div className="mb-8 relative">
             <div className="absolute inset-0 bg-white/10 rounded-full blur-xl"></div>
             <img
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/X_logo.jpg/800px-X_logo.jpg"
+              src="https://arxkebsmrbstwstaxbig.supabase.co/storage/v1/object/public/post-images/uploads/socialX.png"
               alt="X Logo"
               className="w-32 h-32 mx-auto relative z-10 rounded-2xl shadow-2xl"
             />
