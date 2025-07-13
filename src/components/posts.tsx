@@ -2,11 +2,8 @@ import React from "react";
 import { HeartOutlined, HeartFilled } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import { MessageCircle } from "lucide-react";
-import { requestMaker } from "../graphql/requestMaker.ts";
 import { supabase } from "../supabaseClient.jsx";
-import { ADD_LIKE, REMOVE_LIKE } from "../graphql/queries/likes.ts";
 import { toast } from "sonner";
-import { sendLikeNotification } from "../helper/notification-helper.ts";
 
 interface PostCardProps {
   id: string;
@@ -81,16 +78,6 @@ const PostCard: React.FC<PostCardProps> = ({
     setLikeCount((prev) => Math.max(0, prev - 1));
 
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const idToken = session?.access_token || "";
-
-      await requestMaker(REMOVE_LIKE, idToken, {
-        user_id: currentUserId,
-        post_id: postId,
-      });
-
       // Also update in Supabase directly for real-time sync
       await supabase
         .from("likes2")
@@ -116,18 +103,6 @@ const PostCard: React.FC<PostCardProps> = ({
     setLikeCount((prev) => prev + 1);
 
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const idToken = session?.access_token || "";
-
-      // Add like via GraphQL
-      await requestMaker(ADD_LIKE, idToken, {
-        user_id: currentUserId,
-        post_id: postId,
-      });
-
-      // Also insert into Supabase for real-time sync
       const { data, error } = await supabase
         .from("likes2")
         .insert({
@@ -136,11 +111,6 @@ const PostCard: React.FC<PostCardProps> = ({
         })
         .select()
         .single();
-
-      if (!error && data) {
-        // Send notification to post owner
-        await sendLikeNotification(postId, currentUserId, postOwnerId);
-      }
     } catch (error) {
       // Revert on error
       setLikeBtn(false);

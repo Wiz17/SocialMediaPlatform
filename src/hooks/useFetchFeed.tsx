@@ -1,79 +1,84 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
-import { FETCH_FOLLOWED_USERS, FETCH_POSTS } from "../graphql/queries.tsx";
 import PostDataHelper from "../helper/api-to-post-data-converter.ts";
 import { supabase } from "../supabaseClient.jsx";
-import { requestMaker } from "../graphql/requestMaker.ts";
-import { PostData } from "../types/home.ts";
 
-// Separate function to fetch the feed data
-const fetchFeedData = async (
-  userId: string,
-  idToken: string,
-  limit: number = 6,
-) => {
-  if (!idToken) {
-    throw new Error("No authentication token available");
+const fetchFeedData = async (userId: string, limit: number = 6) => {
+  try {
+    // Step 1: Fetch followed users
+    const { data: followedData, error: followedError } = await supabase
+      .from("followers")
+      .select("followed_id")
+      .eq("follower_id", userId);
+
+    if (followedError) {
+      throw followedError;
+    }
+
+    if (!followedData || followedData.length === 0) {
+      return [];
+    }
+
+    const followedIds = followedData.map((item) => item.followed_id);
+
+    // Step 2: Fetch posts from followed users with limit
+    const { data: postsData, error: postsError } = await supabase
+      .from("posts")
+      .select(
+        `
+        id,
+        content,
+        image,
+        created_at,
+        likes,
+        user_id,
+        likes2 (
+          like_id,
+          user_id
+        ),
+        users (
+          username,
+          profile_picture,
+          tag_name
+        )
+      `,
+      )
+      .in("user_id", followedIds)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (postsError) {
+      throw postsError;
+    }
+
+    if (!postsData || postsData.length === 0) {
+      return [];
+    }
+
+    // Convert the posts data to match expected structure
+    const formattedPosts: any = postsData.map((post) => ({
+      postId: post.id,
+      content: post.content,
+      image: post.image,
+      created_at: post.created_at,
+      likes: post.likes,
+      user_id: post.user_id,
+      likes2: post.likes2 || [],
+      users: post.users,
+    }));
+
+    // Pass formatted posts to helper
+    const convertedPosts = PostDataHelper(formattedPosts, userId);
+    console.log(convertedPosts);
+
+    return convertedPosts;
+  } catch (error) {
+    console.error("Error fetching feed data:", error);
+    throw error;
   }
-
-  // Step 1: Fetch followed users
-  const followedData = await requestMaker(
-    FETCH_FOLLOWED_USERS.replace("followerId", `"${userId}"`),
-    idToken,
-  );
-
-  const followedIds = followedData.followersCollection.edges.map(
-    (edge: any) => edge.node.followed_id,
-  );
-
-  // Step 2: Fetch posts from followed users with limit
-  const postsData = await requestMaker(
-    FETCH_POSTS.replace("userIds", JSON.stringify(followedIds)).replace(
-      "limit",
-      limit.toString(),
-    ),
-    idToken,
-  );
-
-  const isEmpty = postsData.postsCollection.edges.length === 0;
-  console.log(postsData, isEmpty);
-
-  if (isEmpty) {
-    return [];
-  }
-
-  // Posts are already sorted by created_at DESC from the server
-  // Convert and return the posts
-  const convertedPosts = PostDataHelper(
-    postsData.postsCollection.edges,
-    userId,
-  );
-  console.log(convertedPosts);
-
-  return convertedPosts;
-};
-
-// Custom hook to get auth token
-const useAuthToken = () => {
-  const [idToken, setIdToken] = useState<string>("");
-
-  useEffect(() => {
-    const fetchAuthToken = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const token = session?.access_token || "";
-      setIdToken(token);
-    };
-
-    fetchAuthToken();
-  }, []);
-
-  return idToken;
 };
 
 export const useFetchFeed = (userId: string) => {
-  const idToken = useAuthToken();
   // Initial limit of 6 posts, will be increased when loading more
   const [postsLimit, setPostsLimit] = useState<number>(6);
   // Store all posts - newest first (sorted by created_at DESC from the server)
@@ -89,8 +94,8 @@ export const useFetchFeed = (userId: string) => {
     isRefetching,
   } = useQuery({
     queryKey: ["feed", userId, postsLimit], // Cache key - will cache per user and limit
-    queryFn: () => fetchFeedData(userId, idToken, postsLimit),
-    enabled: !!userId && !!idToken, // Only run when we have both userId and token
+    queryFn: () => fetchFeedData(userId, postsLimit),
+    enabled: !!userId, // Only run when we have both userId and token
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
     refetchOnWindowFocus: false, // Don't refetch when window regains focus
