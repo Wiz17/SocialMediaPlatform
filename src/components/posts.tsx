@@ -125,19 +125,27 @@ const PostCard: React.FC<PostCardProps> = ({
     <>
       <div className="h-[0.5px] bg-gray-700 w-full mx-auto my-4"></div>
 
-      <div className="flex w-full">
-        <div className="w-1/12 min-w-[50px]">
+      <div className="sm:flex w-full">
+        <div className="max-sm:flex ">
           <img
             src={userImg}
             alt=""
             className="object-cover w-12 h-12 rounded-[50%]"
           />
-        </div>
-        <div className="ml-3 w-10/12 flex flex-col gap-3">
-          <div className="flex items-center">
+          <div className="sm:hidden  ml-4">
             <h1 className="text-white font-bold text-lg">{name}</h1>
-            <span className="text-gray-500 ml-1">{tagName}</span>
-            <p className="text-gray-500 ml-3">{timeAgo}</p>
+            <span className="text-gray-500">
+              {tagName}&nbsp;{timeAgo}
+            </span>
+          </div>
+        </div>
+        <div className="sm:ml-3 w-full sm:w-10/12 flex flex-col gap-3">
+          <div className="flex items-center">
+            <h1 className="max-sm:hidden text-white font-bold text-lg">
+              {name}
+            </h1>
+            <span className="max-sm:hidden text-gray-500 ml-1">{tagName}</span>
+            <p className="max-sm:hidden text-gray-500 ml-3">{timeAgo}</p>
           </div>
           <p className="text-white -mt-2">{content}</p>
           {postImg && (

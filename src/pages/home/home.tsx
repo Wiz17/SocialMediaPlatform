@@ -24,7 +24,7 @@ const HomeFeedsPage = () => {
   const userId: string = localStorage.getItem("id") || "";
   const { fetchFeed, posts, loading, error, loadMore, hasMore } =
     useFetchFeed(userId);
-  console.log(error);
+  // console.log(posts.length);
   const { addPost, loading2, error2: errorInPosting } = useAddPost();
   const { uploadFile, uploading, error3: uploadingError } = useFileUploader();
   const { fetchFollowedUsers, users2, loading5, error5 } =
@@ -247,13 +247,13 @@ const HomeFeedsPage = () => {
                 }}
                 loader={<PostFeedSuspence repeat={5} />}
               >
-                {posts?.length === 0 ? ( // Check if the users array is empty
+                {posts && posts.length === 0 ? (
+                  // Only show "no posts" when we have an empty array (not undefined)
                   <NoPostFoundUI />
                 ) : (
                   <div className="p-4">
                     {posts?.map((data) => {
                       const timeAgo = CalculateTimeAgo(data.created_at);
-                      // console.log(data)
                       return (
                         <PostCard
                           key={data.id}
@@ -267,17 +267,15 @@ const HomeFeedsPage = () => {
                           tagName={data.users.tag_name}
                           likes={data.likes}
                           liked={data.liked}
-                          // dataArr={dataLikedPosts}
-                          // dataArrSetState={setDataLikedPosts}
                         />
                       );
                     })}
 
-                    {/* Load More Button - Shows older posts when clicked */}
-                    {hasMore && posts?.length > 0 && (
+                    {/* Load More Button */}
+                    {hasMore && posts && posts.length > 0 && (
                       <div className="flex justify-center mt-6 mb-4">
                         <button
-                          onClick={() => loadMorePost()}
+                          onClick={() => loadMore()}
                           className="bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 focus:outline-none font-bold disabled:bg-gray-400 disabled:cursor-not-allowed"
                           disabled={loading}
                         >

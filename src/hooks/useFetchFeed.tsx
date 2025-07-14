@@ -81,8 +81,6 @@ const fetchFeedData = async (userId: string, limit: number = 6) => {
 export const useFetchFeed = (userId: string) => {
   // Initial limit of 6 posts, will be increased when loading more
   const [postsLimit, setPostsLimit] = useState<number>(6);
-  // Store all posts - newest first (sorted by created_at DESC from the server)
-  const [allPosts, setAllPosts] = useState<any[]>([]);
   // Track if there are more posts to load
   const [hasMore, setHasMore] = useState<boolean>(true);
 
@@ -104,10 +102,9 @@ export const useFetchFeed = (userId: string) => {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 
-  // Update allPosts when posts data changes
+  // Update hasMore when posts data changes
   useEffect(() => {
-    if (posts) {
-      setAllPosts(posts);
+    if (posts !== undefined) {
       // If we got fewer posts than requested, there are no more posts to load
       setHasMore(posts.length >= postsLimit);
     }
@@ -129,7 +126,7 @@ export const useFetchFeed = (userId: string) => {
   return {
     fetchFeed, // Manual refetch function
     loadMore, // Function to load more posts
-    posts: allPosts,
+    posts: posts, // This will be undefined until data loads, then either an array or empty array
     loading: loading || isRefetching,
     error: errorMessage,
     hasMore, // Boolean indicating if there are more posts to load

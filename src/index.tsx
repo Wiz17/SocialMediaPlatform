@@ -26,7 +26,7 @@ root.render(
   <>
     <QueryClientProvider client={queryClient}>
       <Routes />
-      <AuthDebug />
+      {/* <AuthDebug /> */}
       <Toaster position="bottom-right" richColors />
     </QueryClientProvider>
   </>,
