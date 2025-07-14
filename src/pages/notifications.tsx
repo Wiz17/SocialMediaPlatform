@@ -5,7 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 // Use environment variables
 const SUPABASE_URL = "https://arxkebsmrbstwstaxbig.supabase.co";
 const API_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyeGtlYnNtcmJzdHdzdGF4YmlnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczMzEyNDkwNiwiZXhwIjoyMDQ4NzAwOTA2fQ.B5q-bi3Rz33jzgkz8QgGNQyKso3g2clpNxxc5Uu-_vk"; // Replace with your API key
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyeGtlYnNtcmJzdHdzdGF4YmlnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczMzEyNDkwNiwiZXhwIjoyMDQ4NzAwOTA2fQ.B5q-bi3Rz33jzgkz8QgGNQyKso3g2clpNxxc5Uu-_vk";
 
 const supabase = createClient(SUPABASE_URL, API_KEY);
 
@@ -38,10 +38,19 @@ const Notifications: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
+
     if (currentUserId) {
       fetchNotifications();
-      subscribeToNotifications();
+      unsubscribe = subscribeToNotifications();
     }
+
+    // Clean up subscription on unmount or when currentUserId changes
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, [currentUserId]);
 
   const getCurrentUser = async () => {
@@ -65,6 +74,7 @@ const Notifications: React.FC = () => {
           post:post_id(content, image)
         `,
         )
+        .eq("user_id", currentUserId) // Add this filter
         .order("created_at", { ascending: false })
         .limit(50);
 
@@ -78,8 +88,10 @@ const Notifications: React.FC = () => {
   };
 
   const subscribeToNotifications = () => {
+    console.log("Setting up subscription for user:", currentUserId);
+
     const subscription = supabase
-      .channel("notifications-channel")
+      .channel(`notifications-${currentUserId}`) // Unique channel name
       .on(
         "postgres_changes",
         {
@@ -89,34 +101,53 @@ const Notifications: React.FC = () => {
           filter: `user_id=eq.${currentUserId}`,
         },
         async (payload) => {
-          // Fetch the complete notification with user details
-          const { data } = await supabase
-            .from("notifications")
-            .select(
-              `
-              *,
-              actor:actor_id(username, profile_picture),
-              post:post_id(content, image)
-            `,
-            )
-            .eq("id", payload.new.id)
-            .single();
+          console.log("Received notification payload:", payload);
 
-          if (data) {
-            setNotifications((prev) => [data, ...prev]);
-            // Show browser notification
-            if (Notification.permission === "granted") {
-              new Notification("New Like!", {
-                body: `${data.actor?.username || "Someone"} liked your post`,
-                icon: data.actor?.profile_picture || "/default-avatar.png",
-              });
+          try {
+            // Fetch the complete notification with user details
+            const { data, error } = await supabase
+              .from("notifications")
+              .select(
+                `
+                *,
+                actor:actor_id(username, profile_picture),
+                post:post_id(content, image)
+              `,
+              )
+              .eq("id", payload.new.id)
+              .single();
+
+            if (error) {
+              console.error("Error fetching notification details:", error);
+              return;
             }
+
+            if (data) {
+              console.log("Adding notification to list:", data);
+              setNotifications((prev) => [data, ...prev]);
+
+              // Show browser notification
+              if (Notification.permission === "granted") {
+                new Notification("New Like!", {
+                  body: `${data.actor?.username || "Someone"} liked your post`,
+                  icon: data.actor?.profile_picture || "/default-avatar.png",
+                });
+              }
+            }
+          } catch (err) {
+            console.error("Error processing notification:", err);
           }
         },
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Subscription status:", status);
+        if (status === "SUBSCRIBED") {
+          console.log("Successfully subscribed to notifications");
+        }
+      });
 
     return () => {
+      console.log("Unsubscribing from notifications");
       subscription.unsubscribe();
     };
   };
@@ -140,6 +171,7 @@ const Notifications: React.FC = () => {
     const { error } = await supabase
       .from("notifications")
       .update({ is_read: true })
+      .eq("user_id", currentUserId) // Add user filter
       .eq("is_read", false);
 
     if (!error) {
@@ -170,32 +202,34 @@ const Notifications: React.FC = () => {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
+  // Your JSX remains the same...
   return (
     <div className="flex">
       <div className="max-sm:hidden w-[15%]" />
       <LeftNav />
-      <div className="w-[85%] min-h-screen bg-black text-white">
-        <div className="max-w-3xl mx-auto p-6">
-          <div className="flex items-center justify-between mb-6">
+      <div className="w-full sm:w-[85%] min-h-screen bg-black text-white">
+        <div className="max-w-3xl mx-auto p-3 sm:p-6">
+          {/* Header Section */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
             <div>
-              <h1 className="text-2xl font-bold">Notifications</h1>
+              <h1 className="text-xl sm:text-2xl font-bold">Notifications</h1>
               {unreadCount > 0 && (
-                <p className="text-gray-400 text-sm mt-1">
+                <p className="text-gray-400 text-xs sm:text-sm mt-1">
                   {unreadCount} unread
                 </p>
               )}
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3">
               <button
                 onClick={requestNotificationPermission}
-                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm"
+                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-xs sm:text-sm"
               >
                 Enable Alerts
               </button>
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm"
+                  className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-xs sm:text-sm"
                 >
                   Mark all read
                 </button>
@@ -209,7 +243,9 @@ const Notifications: React.FC = () => {
             </div>
           ) : notifications.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-400">No notifications yet</p>
+              <p className="text-gray-400 text-sm sm:text-base">
+                No notifications yet
+              </p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -219,7 +255,7 @@ const Notifications: React.FC = () => {
                   onClick={() =>
                     !notification.is_read && markAsRead(notification.id)
                   }
-                  className={`flex items-start gap-3 p-4 rounded-lg cursor-pointer transition-colors ${
+                  className={`flex items-start gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg cursor-pointer transition-colors ${
                     notification.is_read
                       ? "bg-gray-900 hover:bg-gray-800"
                       : "bg-blue-900/20 hover:bg-blue-900/30 border border-blue-800/30"
@@ -231,26 +267,28 @@ const Notifications: React.FC = () => {
                       "/default-avatar.png"
                     }
                     alt={notification.actor?.username}
-                    className="w-10 h-10 rounded-full object-cover"
+                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover flex-shrink-0"
                   />
-                  <div className="flex-1">
-                    <p className="text-sm">
+
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm break-words">
                       <span className="font-semibold">
                         {notification.actor?.username || "Someone"}
                       </span>{" "}
                       {notification.message}
                     </p>
                     {notification.post && (
-                      <p className="text-gray-400 text-sm mt-1 line-clamp-2">
+                      <p className="text-gray-400 text-xs sm:text-sm mt-1 line-clamp-2 break-words">
                         "{notification.post.content}"
                       </p>
                     )}
-                    <p className="text-gray-500 text-xs mt-1">
+                    <p className="text-gray-500 text-[10px] sm:text-xs mt-1">
                       {formatTime(notification.created_at)}
                     </p>
                   </div>
+
                   {!notification.is_read && (
-                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full mt-1.5 sm:mt-2 flex-shrink-0"></div>
                   )}
                 </div>
               ))}
