@@ -1,9 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import PostDataHelper from "../helper/api-to-post-data-converter.ts";
 import { supabase } from "../supabaseClient.jsx";
 
-const fetchFeedData = async (userId: string, limit: number = 6) => {
+const POSTS_PER_PAGE = 6;
+
+const fetchFeedData = async (userId: string, pageParam: number = 0) => {
   try {
     // Step 1: Fetch followed users
     const { data: followedData, error: followedError } = await supabase
@@ -16,12 +17,15 @@ const fetchFeedData = async (userId: string, limit: number = 6) => {
     }
 
     if (!followedData || followedData.length === 0) {
-      return [];
+      return {
+        posts: [],
+        nextOffset: null,
+      };
     }
 
     const followedIds = followedData.map((item) => item.followed_id);
 
-    // Step 2: Fetch posts from followed users with limit
+    // Step 2: Fetch posts from followed users with pagination
     const { data: postsData, error: postsError } = await supabase
       .from("posts")
       .select(
@@ -45,18 +49,21 @@ const fetchFeedData = async (userId: string, limit: number = 6) => {
       )
       .in("user_id", followedIds)
       .order("created_at", { ascending: false })
-      .limit(limit);
+      .range(pageParam, pageParam + POSTS_PER_PAGE - 1); // Use range for pagination
 
     if (postsError) {
       throw postsError;
     }
 
-    if (!postsData || postsData.length === 0) {
-      return [];
+    if (!postsData) {
+      return {
+        posts: [],
+        nextOffset: null,
+      };
     }
 
     // Convert the posts data to match expected structure
-    const formattedPosts: any = postsData.map((post) => ({
+    const formattedPosts = postsData.map((post) => ({
       postId: post.id,
       content: post.content,
       image: post.image,
@@ -69,9 +76,13 @@ const fetchFeedData = async (userId: string, limit: number = 6) => {
 
     // Pass formatted posts to helper
     const convertedPosts = PostDataHelper(formattedPosts, userId);
-    console.log(convertedPosts);
 
-    return convertedPosts;
+    // Return posts and next offset
+    return {
+      posts: convertedPosts,
+      nextOffset:
+        postsData.length === POSTS_PER_PAGE ? pageParam + POSTS_PER_PAGE : null, // null means no more pages
+    };
   } catch (error) {
     console.error("Error fetching feed data:", error);
     throw error;
@@ -79,21 +90,21 @@ const fetchFeedData = async (userId: string, limit: number = 6) => {
 };
 
 export const useFetchFeed = (userId: string) => {
-  // Initial limit of 6 posts, will be increased when loading more
-  const [postsLimit, setPostsLimit] = useState<number>(6);
-  // Track if there are more posts to load
-  const [hasMore, setHasMore] = useState<boolean>(true);
-
   const {
-    data: posts,
-    isLoading: loading,
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isLoading,
+    isFetchingNextPage,
     error,
-    refetch: refetchFeed,
+    refetch,
     isRefetching,
-  } = useQuery({
-    queryKey: ["feed", userId, postsLimit], // Cache key - will cache per user and limit
-    queryFn: () => fetchFeedData(userId, postsLimit),
-    enabled: !!userId, // Only run when we have both userId and token
+  } = useInfiniteQuery({
+    queryKey: ["feed", userId],
+    queryFn: ({ pageParam }) => fetchFeedData(userId, pageParam as number),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage.nextOffset,
+    enabled: !!userId,
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
     refetchOnWindowFocus: false, // Don't refetch when window regains focus
@@ -102,22 +113,19 @@ export const useFetchFeed = (userId: string) => {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 
-  // Update hasMore when posts data changes
-  useEffect(() => {
-    if (posts !== undefined) {
-      // If we got fewer posts than requested, there are no more posts to load
-      setHasMore(posts.length >= postsLimit);
-    }
-  }, [posts, postsLimit]);
+  // Flatten all pages into a single array of posts
+  const posts = data?.pages.flatMap((page) => page.posts) ?? [];
 
-  // Function to load more posts (older posts will be appended to the list)
+  // Function to load more posts
   const loadMore = () => {
-    setPostsLimit((prevLimit) => prevLimit + 6); // Increase limit by 6 to load older posts
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
   };
 
-  // Function to refresh feed with current limit
+  // Function to refresh feed (refetch from the beginning)
   const fetchFeed = () => {
-    return refetchFeed();
+    return refetch();
   };
 
   // Convert error to string format to match original hook
@@ -126,9 +134,10 @@ export const useFetchFeed = (userId: string) => {
   return {
     fetchFeed, // Manual refetch function
     loadMore, // Function to load more posts
-    posts: posts, // This will be undefined until data loads, then either an array or empty array
-    loading: loading || isRefetching,
+    posts, // Flattened array of all posts
+    loading: isLoading || isRefetching,
     error: errorMessage,
-    hasMore, // Boolean indicating if there are more posts to load
+    hasMore: hasNextPage ?? false,
+    isFetchingNextPage, // Additional state to show loading indicator for pagination
   };
 };

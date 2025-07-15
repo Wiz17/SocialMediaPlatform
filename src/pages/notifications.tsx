@@ -76,7 +76,7 @@ const Notifications: React.FC = () => {
         )
         .eq("user_id", currentUserId) // Add this filter
         .order("created_at", { ascending: false })
-        .limit(50);
+        .limit(10);
 
       if (error) throw error;
       setNotifications(data || []);
