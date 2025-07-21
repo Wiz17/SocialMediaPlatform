@@ -53,7 +53,9 @@ const Login: React.FC = () => {
           </div>
 
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-white mb-2">Sign in to X</h2>
+            <h2 className="text-3xl font-bold text-white mb-2">
+              Sign in to SocialX
+            </h2>
             <p className="text-gray-400 text-sm">
               Welcome back! Please enter your details.
             </p>

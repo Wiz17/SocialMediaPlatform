@@ -130,7 +130,7 @@ const HomeFeedsPage = () => {
       <div className="bg-black flex">
         <div className="max-sm:hidden w-[15%]">.</div>
 
-        <LeftNav />
+        {/* <LeftNav /> */}
         <section className="w-full sm:w-[85%] lg:w-[50%] border-r border-r-gray-700 min-h-screen max-sm:pb-10">
           <div className="flex text-white justify-around items-center border-b border-b-gray-700">
             <button

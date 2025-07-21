@@ -88,7 +88,7 @@ const Updates = () => {
   return (
     <div className="flex">
       <div className="max-sm:hidden w-[15%]"></div>
-      <LeftNav />
+      {/* <LeftNav /> */}
       <section className="w-full sm:w-[85%] border-r-gray-700 min-h-screen bg-black">
         <div className="max-w-4xl mx-auto p-5 sm:p-8">
           {/* Header */}

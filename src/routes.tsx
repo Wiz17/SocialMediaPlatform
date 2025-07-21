@@ -1,5 +1,5 @@
 // routes/RoutesComponent.tsx
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Route,
@@ -11,11 +11,12 @@ import { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabaseClient"; // Adjust import path
 import PrivateRoutes from "./privateRoutes.ts";
 import PublicRoutes from "./publicRoutes.ts";
+import PrivateLayout from "./privateLayout.tsx";
 
 // Loading component
 const LoadingSpinner = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+  <div className="flex items-center justify-center min-h-screen bg-gray-900">
+    <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-700 border-b-white"></div>
   </div>
 );
 
@@ -83,7 +84,6 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log("Auth event in PublicRoute:", _event);
       setSession(session);
       setLoading(false);
     });
@@ -121,17 +121,21 @@ const RoutesComponent: React.FC = () => {
     <Router>
       <Routes>
         {/* Private Routes - Only accessible when user is logged in */}
-        {PrivateRoutes.map((route) => (
-          <Route
-            key={route.path}
-            path={route.path}
-            element={
-              <PrivateRoute>
-                <route.component />
-              </PrivateRoute>
-            }
-          />
-        ))}
+        <Route element={<PrivateLayout />}>
+          {PrivateRoutes.map((route) => (
+            <Route
+              key={route.path}
+              path={route.path}
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <PrivateRoute>
+                    <route.component />
+                  </PrivateRoute>
+                </Suspense>
+              }
+            />
+          ))}
+        </Route>
 
         {/* Public Routes - Only accessible when user is not logged in */}
         {PublicRoutes.map((route) => (
@@ -139,9 +143,11 @@ const RoutesComponent: React.FC = () => {
             key={route.path}
             path={route.path}
             element={
-              <PublicRoute>
-                <route.component />
-              </PublicRoute>
+              <Suspense fallback={<LoadingSpinner />}>
+                <PublicRoute>
+                  <route.component />
+                </PublicRoute>
+              </Suspense>
             }
           />
         ))}

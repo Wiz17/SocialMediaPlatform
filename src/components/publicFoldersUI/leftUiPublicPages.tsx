@@ -4,42 +4,34 @@ const LeftUiPublicPages = () => {
   return (
     <>
       <div className="hidden lg:flex lg:w-1/2 bg-black items-center justify-center relative overflow-hidden">
+        {/* Full page background image - choose one of these options */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-50"
+          style={{
+            // Option 1: People connecting/networking
+            backgroundImage:
+              "url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200')",
+
+            // Option 2: Social media icons pattern
+            // backgroundImage: "url('https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=1200')"
+
+            // Option 3: People using phones/social media
+            // backgroundImage: "url('https://images.unsplash.com/photo-1563986768609-322da13575f3?w=1200')"
+
+            // Option 4: Abstract network connections
+            // backgroundImage: "url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200')"
+
+            // Option 5: Community/group of people
+            // backgroundImage: "url('https://images.unsplash.com/photo-1556761175-4b46a572b786?w=1200')"
+          }}
+        ></div>
+
+        {/* Dark overlay to ensure text readability */}
+        <div className="absolute inset-0 bg-black/10"></div>
+
+        {/* Gradient overlays */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(29,78,216,0.15),_transparent_50%)]"></div>
-
-        {/* Floating elements for visual appeal */}
-        <div className="absolute top-20 left-20 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-        <div className="absolute top-40 right-32 w-1 h-1 bg-purple-500 rounded-full animate-pulse delay-1000"></div>
-        <div className="absolute bottom-32 left-32 w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse delay-500"></div>
-
-        <div className="relative z-10 text-center max-w-md px-8">
-          <div className="mb-8 relative">
-            <div className="absolute inset-0 bg-white/10 rounded-full blur-xl"></div>
-            <img
-              src="https://arxkebsmrbstwstaxbig.supabase.co/storage/v1/object/public/post-images/uploads/socialX.png"
-              alt="X Logo"
-              className="w-32 h-32 mx-auto relative z-10 rounded-2xl shadow-2xl"
-            />
-          </div>
-          <h1 className="text-5xl font-bold text-white mb-4 leading-tight">
-            Happening now
-          </h1>
-          <p className="text-xl text-gray-300 font-light mb-8">Join today.</p>
-          <div className="flex flex-col space-y-2 text-gray-400 text-sm">
-            <div className="flex items-center justify-center space-x-2">
-              <div className="w-1 h-1 bg-blue-500 rounded-full"></div>
-              <span>Connect with people worldwide</span>
-            </div>
-            <div className="flex items-center justify-center space-x-2">
-              <div className="w-1 h-1 bg-purple-500 rounded-full"></div>
-              <span>Share your thoughts instantly</span>
-            </div>
-            <div className="flex items-center justify-center space-x-2">
-              <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
-              <span>Be part of the conversation</span>
-            </div>
-          </div>
-        </div>
       </div>
     </>
   );
