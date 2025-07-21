@@ -46,13 +46,13 @@ const Signup: React.FC = () => {
       <div className="w-full lg:w-1/2 bg-black flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
-          <div className="lg:hidden text-center mb-8">
+          {/* <div className="lg:hidden text-center mb-8">
             <img
               src="https://arxkebsmrbstwstaxbig.supabase.co/storage/v1/object/public/post-images/uploads/socialX.png"
               alt="X Logo"
               className="w-24 h-24 mx-auto mb-4 "
             />
-          </div>
+          </div> */}
 
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-white mb-2">
