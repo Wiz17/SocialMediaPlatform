@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "../supabaseClient.jsx";
 import { useAppSelector } from "../redux/store/hooks.ts";
 import formatTime from "../helper/format-time-notifications.ts";
 import { useAppDispatch } from "../redux/store/hooks.ts";
@@ -9,11 +9,6 @@ import {
 } from "../redux/store/slices/notificationSlice.ts";
 
 // Use environment variables
-const SUPABASE_URL = "https://arxkebsmrbstwstaxbig.supabase.co";
-const API_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyeGtlYnNtcmJzdHdzdGF4YmlnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczMzEyNDkwNiwiZXhwIjoyMDQ4NzAwOTA2fQ.B5q-bi3Rz33jzgkz8QgGNQyKso3g2clpNxxc5Uu-_vk";
-
-const supabase = createClient(SUPABASE_URL, API_KEY);
 
 interface Notification {
   id: string;

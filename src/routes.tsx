@@ -118,44 +118,42 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 const RoutesComponent: React.FC = () => {
   return (
-    <Router>
-      <Routes>
-        {/* Private Routes - Only accessible when user is logged in */}
-        <Route element={<PrivateLayout />}>
-          {PrivateRoutes.map((route) => (
-            <Route
-              key={route.path}
-              path={route.path}
-              element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <PrivateRoute>
-                    <route.component />
-                  </PrivateRoute>
-                </Suspense>
-              }
-            />
-          ))}
-        </Route>
-
-        {/* Public Routes - Only accessible when user is not logged in */}
-        {PublicRoutes.map((route) => (
+    <Routes>
+      {/* Private Routes - Only accessible when user is logged in */}
+      <Route element={<PrivateLayout />}>
+        {PrivateRoutes.map((route) => (
           <Route
             key={route.path}
             path={route.path}
             element={
               <Suspense fallback={<LoadingSpinner />}>
-                <PublicRoute>
+                <PrivateRoute>
                   <route.component />
-                </PublicRoute>
+                </PrivateRoute>
               </Suspense>
             }
           />
         ))}
+      </Route>
 
-        {/* Fallback route */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+      {/* Public Routes - Only accessible when user is not logged in */}
+      {PublicRoutes.map((route) => (
+        <Route
+          key={route.path}
+          path={route.path}
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <PublicRoute>
+                <route.component />
+              </PublicRoute>
+            </Suspense>
+          }
+        />
+      ))}
+
+      {/* Fallback route */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 };
 

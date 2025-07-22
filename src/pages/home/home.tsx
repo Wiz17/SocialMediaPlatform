@@ -8,7 +8,6 @@ import { useFileUploader } from "../../hooks/useFileUploader.tsx";
 import { useState } from "react";
 import { CameraSvg } from "../../utils/svg.tsx";
 import CalculateTimeAgo from "../../helper/calculate-time-ago.ts";
-import LeftNav from "../../components/leftNav.tsx";
 import FollowSuggestion from "./follow-suggestion.tsx";
 import PostFeedSuspence from "../../components/suspense/post-feed.tsx";
 import FollowingTab from "./following-tab.tsx";
@@ -29,12 +28,7 @@ const HomeFeedsPage = () => {
   const { uploadFile, uploading, error3: uploadingError } = useFileUploader();
   const { fetchFollowedUsers, users2, loading5, error5 } =
     useFetchFollowedUsers(userId);
-  const {
-    fetchSuggestions,
-    loading: loading6,
-    error: error6,
-    suggestions,
-  } = useMentionSuggestor();
+  const { fetchSuggestions, suggestions } = useMentionSuggestor();
   const [inputValue, setInputValue] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [section, setSection] = useState(true);
@@ -172,7 +166,9 @@ const HomeFeedsPage = () => {
                     <MentionSuggestionModal
                       open={openMentionModal}
                       onClose={() => setOpenMentionModal(false)}
-                      textareaRef={textareaRef}
+                      textareaRef={
+                        textareaRef as React.RefObject<HTMLTextAreaElement>
+                      }
                       mentionSuggestionData={suggestions}
                     />
                   </div>
@@ -198,7 +194,11 @@ const HomeFeedsPage = () => {
                     )}
                     {imgUrl && (
                       <>
-                        <img src={imgUrl} className="w-full object-cover" />
+                        <img
+                          src={imgUrl}
+                          className="w-full object-cover"
+                          alt="post image"
+                        />
                         <button
                           className="absolute -top-2 -right-2 bg-gray-900 text-white p-2 rounded-full"
                           onClick={() => setImgUrl("")}

@@ -1,43 +1,12 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { createClient } from "@supabase/supabase-js";
-
-// Use environment variables
-const SUPABASE_URL = "https://arxkebsmrbstwstaxbig.supabase.co";
-const API_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyeGtlYnNtcmJzdHdzdGF4YmlnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczMzEyNDkwNiwiZXhwIjoyMDQ4NzAwOTA2fQ.B5q-bi3Rz33jzgkz8QgGNQyKso3g2clpNxxc5Uu-_vk";
-
-const supabase = createClient(SUPABASE_URL, API_KEY);
-
+import { supabase } from "../../../supabaseClient.jsx";
 // Types
-interface Actor {
-  username: string;
-  profile_picture: string;
-}
-
-interface Post {
-  content: string;
-  image: string;
-}
-
-interface Notification {
-  id: string;
-  user_id: string;
-  actor_id: string;
-  post_id: string;
-  message: string;
-  type: string;
-  is_read: boolean;
-  created_at: string;
-  actor?: Actor;
-  post?: Post;
-}
-
-interface NotificationsState {
-  data: Notification[];
-  loading: boolean;
-  error: string | null;
-  markingAsRead: boolean; // Add loading state for marking as read
-}
+import {
+  Actor,
+  Post,
+  Notification,
+  NotificationsState,
+} from "../../../types/notificationSlice.ts";
 
 // Initial state
 const initialState: NotificationsState = {
