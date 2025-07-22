@@ -76,7 +76,7 @@ const Signup: React.FC = () => {
           )}
 
           <div className="space-y-6">
-            <button
+            {/* <button
               type="button"
               className="w-full bg-transparent border border-gray-600 text-white py-4 px-6 rounded-full font-medium text-lg hover:bg-gray-900 transition-colors"
             >
@@ -114,7 +114,7 @@ const Signup: React.FC = () => {
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-black text-gray-400">or</span>
               </div>
-            </div>
+            </div> */}
 
             <div className="space-y-4">
               <div className="relative">

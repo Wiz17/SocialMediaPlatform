@@ -141,16 +141,16 @@ const Login: React.FC = () => {
               )}
             </button>
 
-            <div className="relative">
+            {/* <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-600"></div>
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-black text-gray-400">or</span>
               </div>
-            </div>
+            </div> */}
 
-            <button
+            {/* <button
               type="button"
               className="w-full bg-transparent border border-gray-600 text-white py-4 px-6 rounded-full font-medium text-lg hover:bg-gray-900 transition-colors"
             >
@@ -179,7 +179,7 @@ const Login: React.FC = () => {
                 </svg>
                 Continue with Google
               </div>
-            </button>
+            </button> */}
           </form>
 
           <div className="mt-8 text-center">

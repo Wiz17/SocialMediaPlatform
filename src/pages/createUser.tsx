@@ -285,16 +285,16 @@ const CreateUser: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading || !!error2 || !!fileError}
-                className={`w-full py-3 px-4 rounded-full font-bold text-white transition-all duration-300 transform ${
+                className={`w-full py-3 px-4 rounded-full font-bold transition-all duration-300 transform ${
                   loading || !!error2 || !!fileError
-                    ? "bg-gray-700 cursor-not-allowed opacity-50"
-                    : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 hover:scale-[1.02] active:scale-[0.98]"
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed opacity-50"
+                    : "bg-white text-black hover:bg-gray-100 active:bg-gray-200 hover:scale-[1.02] active:scale-[0.98] border border-gray-300"
                 } shadow-lg hover:shadow-xl`}
               >
                 {loading ? (
                   <div className="flex items-center justify-center">
                     <svg
-                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-700"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
