@@ -1,5 +1,5 @@
 const SUPABASE_GRAPHQL_URL = process.env.REACT_APP_SUPABASE_URL; // Replace with your project URL
-const API_KEY = process.env.REACT_APP_SUPABASE_API_KEY; // Replace with your API key
+const API_KEY = process.env.REACT_APP_SUPABASE_ANON_KEY; // Replace with your API key
 
 export const fetchGraphQL = async (query: string) => {
   try {
