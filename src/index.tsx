@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Provider } from "react-redux";
 import { store } from "./redux/store/index.ts";
 import { BrowserRouter } from "react-router-dom";
-
+import { AuthDebug } from "../src/components/authDebug.tsx";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -30,7 +30,7 @@ root.render(
         <Provider store={store}>
           <Routes />
         </Provider>
-        {/* <AuthDebug /> */}
+        <AuthDebug />
         <Toaster position="bottom-right" richColors />
       </QueryClientProvider>
     </BrowserRouter>

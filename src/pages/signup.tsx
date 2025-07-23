@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { supabase } from "../supabaseClient";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import LeftUiPublicPages from "../components/publicFoldersUI/leftUiPublicPages.tsx";
 const Signup: React.FC = () => {
   const [email, setEmail] = useState<string>(""); // Email state
@@ -8,32 +8,40 @@ const Signup: React.FC = () => {
   const [error, setError] = useState<string | null>(null); // Error state
   const [loading, setLoading] = useState<boolean>(false); // Loading state
   const [successMessage, setSuccessMessage] = useState<string | null>(null); // Success message state
-  const navigate = useNavigate();
+
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     setSuccessMessage(null);
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            onboarded: false,
+          },
+        },
+      });
 
-    setLoading(false);
+      if (error) throw error;
 
-    if (error) {
-      setError(error.message);
-    } else {
-      setSuccessMessage(
-        "Signup successful! Check your email for confirmation.",
-      );
-
-      if (data.user) {
-        localStorage.setItem("user_id_create_user", data.user.id || "");
-        localStorage.setItem("email", data.user.email || "");
-        navigate("/createuser");
+      // Check if email confirmation is required
+      if (data?.user && data.user.identities?.length === 0) {
+        setSuccessMessage(
+          "Please check your email for a confirmation link to complete signup.",
+        );
+      } else {
+        // User is automatically signed in
+        setSuccessMessage("Signup successful! Redirecting...");
+        // Let the auth state change listener in your route guard handle navigation
       }
+    } catch (err: any) {
+      setError(err.message || "Failed to sign up");
+    } finally {
+      setLoading(false);
     }
   };
 

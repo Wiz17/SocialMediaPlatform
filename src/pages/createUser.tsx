@@ -1,10 +1,9 @@
 import React, { useState } from "react";
-import { fetchMutationGraphQL } from "../graphql/fetcherMutation.tsx";
-import { ADD_USER } from "../graphql/queries.tsx";
 import { useFileUploader } from "../hooks/useFileUploader.tsx";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import LeftUiPublicPages from "../components/publicFoldersUI/leftUiPublicPages.tsx";
+import { supabase } from "../supabaseClient.jsx";
 
 const CreateUser: React.FC = () => {
   const [username, setUsername] = useState<string>("");
@@ -41,32 +40,67 @@ const CreateUser: React.FC = () => {
         console.log("Profile Photo URL:", profilePhotoUrl);
       }
 
-      // Prepare GraphQL variables
-      const variables = {
-        id: localStorage.getItem("user_id_create_user"),
-        email: localStorage.getItem("email"),
-        profile_picture: profilePhotoUrl,
-        username,
-        bio,
-        tag_name: tagName2,
-      };
+      // Get user ID from the current session
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-      // Execute GraphQL mutation
-      if (error2) {
-        toast.error("Please enter valid tag!");
-        return;
+      if (!user) {
+        throw new Error("No authenticated user found");
       }
 
-      const response = await fetchMutationGraphQL(ADD_USER, variables);
-      console.log("GraphQL Response:", response);
+      // Insert user profile data into Supabase
+      const { data, error } = await supabase
+        .from("users") // Replace with your actual table name
+        .insert({
+          id: user.id, // Use the authenticated user's ID
+          email: user.email,
+          profile_picture: profilePhotoUrl,
+          username: username,
+          bio: bio,
+          tag_name: tagName2,
+        })
+        .select()
+        .single();
 
-      if (!response) {
-        throw new Error("Failed to create user in the database.");
+      if (error) {
+        console.error("Supabase error:", error);
+
+        // Handle unique constraint violations
+        if (error.code === "23505") {
+          if (error.message.includes("username")) {
+            toast.error("Username already taken!");
+          } else {
+            toast.error("Profile already exists!");
+          }
+          return;
+        }
+
+        throw error;
       }
+
+      console.log("Profile created:", data);
+
+      // Update the onboarded flag in user metadata
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: {
+          onboarded: true,
+        },
+      });
+
+      if (updateError) {
+        console.error("Error updating user metadata:", updateError);
+        // Don't throw here - profile is created, just log the error
+      }
+
+      const { error: logoutError } = await supabase.auth.signOut();
 
       toast.success("Account created successfully! 🎉");
-      setTimeout(() => navigate("/login"), 1500);
+
+      // Navigate to home instead of login since user is already authenticated
+      setTimeout(() => navigate("/"), 1500);
     } catch (err: any) {
+      console.error("Error creating profile:", err);
       toast.error(err.message || "Failed to create account");
     } finally {
       setLoading(false);
