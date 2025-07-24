@@ -1,26 +1,36 @@
 import { useState } from "react";
-import { ADD_POST } from "../graphql/queries.tsx";
-import { fetchMutationGraphQL } from '../graphql/fetcherMutation.tsx'; // Your GraphQL fetch function
+import { supabase } from "../supabaseClient.jsx"; // Import your Supabase client
 
 export const useAddPost = () => {
-  const [loading2, setLoading] = useState(false); // Initialize as false
+  const [loading2, setLoading] = useState(false);
   const [error2, setError] = useState<string | null>(null);
 
   const addPost = async (userId: string, content: string, image: string) => {
-
-
     try {
-      setLoading(true); // Set loading to true at the start of the operation
-      setError(null); // Reset error state
-      // Execute GraphQL mutation
-      const data = await fetchMutationGraphQL(ADD_POST, { userId, content, image });
+      setLoading(true);
+      setError(null);
 
-      // Assuming data doesn't need further processing
-      return data.insertIntopostsCollection.records;
+      // Insert post into Supabase
+      const { data, error } = await supabase
+        .from("posts")
+        .insert({
+          user_id: userId,
+          content: content,
+          image: image,
+          created_at: new Date().toISOString(),
+        })
+        .select(); // Returns the inserted record(s)
+
+      if (error) {
+        throw error;
+      }
+
+      return data; // Returns array of inserted posts
     } catch (err: any) {
       setError(err.message || "An error occurred");
+      return null;
     } finally {
-      setLoading(false); // Always reset loading state at the end
+      setLoading(false);
     }
   };
 

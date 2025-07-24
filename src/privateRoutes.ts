@@ -1,6 +1,9 @@
-import Home from "./pages/home/home.tsx";
-import Notifications from "./pages/notifications.tsx";
-import Updates from "./pages/updates.tsx";
+import { lazy } from "react";
+
+const Home = lazy(() => import("./pages/home/home.tsx"));
+const Notifications = lazy(() => import("./pages/notifications.tsx"));
+const Updates = lazy(() => import("./pages/updates.tsx"));
+const CreateUser = lazy(() => import("./pages/createUser.tsx"));
 
 const PrivateRoutes = [
   {
@@ -15,5 +18,10 @@ const PrivateRoutes = [
     path: "/updates",
     component: Updates,
   },
+  {
+    path: "/createuser",
+    component: CreateUser,
+  },
 ];
+
 export default PrivateRoutes;

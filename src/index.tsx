@@ -1,11 +1,12 @@
-import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import Routes from "./routes.tsx";
 import { Toaster } from "sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthDebug } from "./components/authDebug.tsx";
-
+import { Provider } from "react-redux";
+import { store } from "./redux/store/index.ts";
+import { BrowserRouter } from "react-router-dom";
+import { AuthDebug } from "../src/components/authDebug.tsx";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -24,11 +25,15 @@ const root = ReactDOM.createRoot(
 root.render(
   // <React.StrictMode>
   <>
-    <QueryClientProvider client={queryClient}>
-      <Routes />
-      <AuthDebug />
-      <Toaster position="bottom-right" richColors />
-    </QueryClientProvider>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <Provider store={store}>
+          <Routes />
+        </Provider>
+        {/* <AuthDebug /> */}
+        <Toaster position="bottom-right" richColors />
+      </QueryClientProvider>
+    </BrowserRouter>
   </>,
   // </React.StrictMode>
 );

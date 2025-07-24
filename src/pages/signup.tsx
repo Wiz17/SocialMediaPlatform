@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { supabase } from "../supabaseClient";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import LeftUiPublicPages from "../components/publicFoldersUI/leftUiPublicPages.tsx";
 const Signup: React.FC = () => {
   const [email, setEmail] = useState<string>(""); // Email state
@@ -8,32 +8,40 @@ const Signup: React.FC = () => {
   const [error, setError] = useState<string | null>(null); // Error state
   const [loading, setLoading] = useState<boolean>(false); // Loading state
   const [successMessage, setSuccessMessage] = useState<string | null>(null); // Success message state
-  const navigate = useNavigate();
+
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     setSuccessMessage(null);
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            onboarded: false,
+          },
+        },
+      });
 
-    setLoading(false);
+      if (error) throw error;
 
-    if (error) {
-      setError(error.message);
-    } else {
-      setSuccessMessage(
-        "Signup successful! Check your email for confirmation.",
-      );
-
-      if (data.user) {
-        localStorage.setItem("user_id_create_user", data.user.id || "");
-        localStorage.setItem("email", data.user.email || "");
-        navigate("/createuser");
+      // Check if email confirmation is required
+      if (data?.user && data.user.identities?.length === 0) {
+        setSuccessMessage(
+          "Please check your email for a confirmation link to complete signup.",
+        );
+      } else {
+        // User is automatically signed in
+        setSuccessMessage("Signup successful! Redirecting...");
+        // Let the auth state change listener in your route guard handle navigation
       }
+    } catch (err: any) {
+      setError(err.message || "Failed to sign up");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -46,13 +54,13 @@ const Signup: React.FC = () => {
       <div className="w-full lg:w-1/2 bg-black flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
-          <div className="lg:hidden text-center mb-8">
+          {/* <div className="lg:hidden text-center mb-8">
             <img
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/X_logo.jpg/800px-X_logo.jpg"
+              src="https://arxkebsmrbstwstaxbig.supabase.co/storage/v1/object/public/post-images/uploads/socialX.png"
               alt="X Logo"
               className="w-24 h-24 mx-auto mb-4 "
             />
-          </div>
+          </div> */}
 
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-white mb-2">
@@ -76,7 +84,7 @@ const Signup: React.FC = () => {
           )}
 
           <div className="space-y-6">
-            <button
+            {/* <button
               type="button"
               className="w-full bg-transparent border border-gray-600 text-white py-4 px-6 rounded-full font-medium text-lg hover:bg-gray-900 transition-colors"
             >
@@ -114,7 +122,7 @@ const Signup: React.FC = () => {
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-black text-gray-400">or</span>
               </div>
-            </div>
+            </div> */}
 
             <div className="space-y-4">
               <div className="relative">

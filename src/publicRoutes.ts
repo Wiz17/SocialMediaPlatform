@@ -1,6 +1,8 @@
-import Login from "./pages/login.tsx";
-import Signup from "./pages/signup.tsx";
-import CreateUser from "./pages/createUser.tsx";
+import { lazy } from "react";
+
+const Login = lazy(() => import("./pages/login.tsx"));
+const Signup = lazy(() => import("./pages/signup.tsx"));
+
 const PublicRoutes = [
   {
     path: "/login",
@@ -9,10 +11,6 @@ const PublicRoutes = [
   {
     path: "/signup",
     component: Signup,
-  },
-  {
-    path: "/createuser",
-    component: CreateUser,
   },
 ];
 

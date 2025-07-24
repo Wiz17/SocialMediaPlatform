@@ -1,18 +1,14 @@
 import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
-
-const SUPABASE_URL = "https://arxkebsmrbstwstaxbig.supabase.co"; 
-const API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyeGtlYnNtcmJzdHdzdGF4YmlnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczMzEyNDkwNiwiZXhwIjoyMDQ4NzAwOTA2fQ.B5q-bi3Rz33jzgkz8QgGNQyKso3g2clpNxxc5Uu-_vk"; // Replace with your API key
-
-const supabase = createClient(SUPABASE_URL, API_KEY);
+import { supabase } from "../supabaseClient.jsx";
 
 export const useFileUploader = () => {
   const [uploading, setUploading] = useState(false);
   const [error3, setError] = useState<string | null>(null);
 
-  const uploadFile = async (file: File, bucketName: string): Promise<any | null> => {
-
-
+  const uploadFile = async (
+    file: File,
+    bucketName: string,
+  ): Promise<any | null> => {
     try {
       setUploading(true);
       setError(null);
@@ -30,7 +26,9 @@ export const useFileUploader = () => {
       }
 
       // Generate and return the public URL of the uploaded file
-      const publicUrl  = supabase.storage.from(bucketName).getPublicUrl(data.path);
+      const publicUrl = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(data.path);
       return publicUrl;
     } catch (err: any) {
       setError(err.message);
@@ -42,5 +40,3 @@ export const useFileUploader = () => {
 
   return { uploadFile, uploading, error3 };
 };
-
-

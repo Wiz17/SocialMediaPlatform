@@ -1,10 +1,9 @@
 import React, { useState } from "react";
-import { fetchMutationGraphQL } from "../graphql/fetcherMutation.tsx";
-import { ADD_USER } from "../graphql/queries.tsx";
 import { useFileUploader } from "../hooks/useFileUploader.tsx";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import LeftUiPublicPages from "../components/publicFoldersUI/leftUiPublicPages.tsx";
+import { supabase } from "../supabaseClient.jsx";
 
 const CreateUser: React.FC = () => {
   const [username, setUsername] = useState<string>("");
@@ -41,32 +40,67 @@ const CreateUser: React.FC = () => {
         console.log("Profile Photo URL:", profilePhotoUrl);
       }
 
-      // Prepare GraphQL variables
-      const variables = {
-        id: localStorage.getItem("user_id_create_user"),
-        email: localStorage.getItem("email"),
-        profile_picture: profilePhotoUrl,
-        username,
-        bio,
-        tag_name: tagName2,
-      };
+      // Get user ID from the current session
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-      // Execute GraphQL mutation
-      if (error2) {
-        toast.error("Please enter valid tag!");
-        return;
+      if (!user) {
+        throw new Error("No authenticated user found");
       }
 
-      const response = await fetchMutationGraphQL(ADD_USER, variables);
-      console.log("GraphQL Response:", response);
+      // Insert user profile data into Supabase
+      const { data, error } = await supabase
+        .from("users") // Replace with your actual table name
+        .insert({
+          id: user.id, // Use the authenticated user's ID
+          email: user.email,
+          profile_picture: profilePhotoUrl,
+          username: username,
+          bio: bio,
+          tag_name: tagName2,
+        })
+        .select()
+        .single();
 
-      if (!response) {
-        throw new Error("Failed to create user in the database.");
+      if (error) {
+        console.error("Supabase error:", error);
+
+        // Handle unique constraint violations
+        if (error.code === "23505") {
+          if (error.message.includes("username")) {
+            toast.error("Username already taken!");
+          } else {
+            toast.error("Profile already exists!");
+          }
+          return;
+        }
+
+        throw error;
       }
+
+      console.log("Profile created:", data);
+
+      // Update the onboarded flag in user metadata
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: {
+          onboarded: true,
+        },
+      });
+
+      if (updateError) {
+        console.error("Error updating user metadata:", updateError);
+        // Don't throw here - profile is created, just log the error
+      }
+
+      const { error: logoutError } = await supabase.auth.signOut();
 
       toast.success("Account created successfully! 🎉");
-      setTimeout(() => navigate("/login"), 1500);
+
+      // Navigate to home instead of login since user is already authenticated
+      setTimeout(() => navigate("/"), 1500);
     } catch (err: any) {
+      console.error("Error creating profile:", err);
       toast.error(err.message || "Failed to create account");
     } finally {
       setLoading(false);
@@ -138,7 +172,7 @@ const CreateUser: React.FC = () => {
         <div className="w-full max-w-md">
           {/* Mobile Header */}
           <div className="text-center mb-8 lg:hidden">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-white rounded-full mb-4">
+            {/* <div className="inline-flex items-center justify-center w-12 h-12 bg-white rounded-full mb-4">
               <svg
                 className="w-7 h-7 text-black"
                 fill="currentColor"
@@ -146,7 +180,7 @@ const CreateUser: React.FC = () => {
               >
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
               </svg>
-            </div>
+            </div> */}
             <h1 className="text-3xl font-bold text-white mb-2">
               Create your account
             </h1>
@@ -285,16 +319,16 @@ const CreateUser: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading || !!error2 || !!fileError}
-                className={`w-full py-3 px-4 rounded-full font-bold text-white transition-all duration-300 transform ${
+                className={`w-full py-3 px-4 rounded-full font-bold transition-all duration-300 transform ${
                   loading || !!error2 || !!fileError
-                    ? "bg-gray-700 cursor-not-allowed opacity-50"
-                    : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 hover:scale-[1.02] active:scale-[0.98]"
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed opacity-50"
+                    : "bg-white text-black hover:bg-gray-100 active:bg-gray-200 hover:scale-[1.02] active:scale-[0.98] border border-gray-300"
                 } shadow-lg hover:shadow-xl`}
               >
                 {loading ? (
                   <div className="flex items-center justify-center">
                     <svg
-                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-700"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
