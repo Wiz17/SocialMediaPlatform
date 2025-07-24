@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { FOLLOW } from "../graphql/queries.tsx";
-import { fetchMutationGraphQL } from "../graphql/fetcherMutation.tsx";
 import { LoadingOutlined } from "@ant-design/icons";
 import { Spin } from "antd";
 import { toast } from "sonner";
