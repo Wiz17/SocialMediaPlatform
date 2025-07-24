@@ -135,13 +135,13 @@ const LeftNav = () => {
   return (
     <>
       <section className="max-sm:hidden w-[15%] border-r border-r-gray-700  h-screen fixed top-0 left-0 bg-black flex flex-col gap-7 pr-5 pt-3">
-        <div className="flex justify-end">
+        {/* <div className="flex justify-end">
           <img
             src="https://arxkebsmrbstwstaxbig.supabase.co/storage/v1/object/public/post-images/uploads/socialX.png"
             alt="logo"
             className="w-12 h-12 -mb-3 -mr-2"
           />
-        </div>
+        </div> */}
         <div className=" flex justify-end">
           <Link to="/" className="">
             <HomeSvg className="w-8 h-8" />

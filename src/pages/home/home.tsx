@@ -1,5 +1,5 @@
 //implement updates info tab.
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import PostCard from "../../components/posts.tsx";
 import { useFetchFeed } from "../../hooks/useFetchFeed.tsx";
 import { useFetchFollowedUsers } from "../../hooks/useFetchFollowedUsers.tsx";
@@ -37,41 +37,62 @@ const HomeFeedsPage = () => {
   const [openMentionModal, setOpenMentionModal] = useState(false);
   const [showMorePosts, setShowMorePosts] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const formSubmitHandle = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (file) {
-      const uploadedUrl = await uploadFile(file, "post-images");
-      if (uploadingError || uploadedUrl === null) {
-        toast.error("Failed to upload image.");
-        return;
+
+    try {
+      let imageUrl = "";
+
+      // Handle file upload if file exists
+      if (file) {
+        try {
+          const uploadedUrl = await uploadFile(file, "post-images");
+
+          if (!uploadedUrl?.data?.publicUrl) {
+            throw new Error("Failed to get image URL");
+          }
+
+          imageUrl = uploadedUrl.data.publicUrl;
+        } catch (uploadError) {
+          console.error("Upload error:", uploadError);
+          toast.error("Failed to upload image. Please try again.");
+          return; // Exit early if upload fails
+        }
       }
-      addPost(userId, inputValue, uploadedUrl.data.publicUrl);
-      if (errorInPosting) {
-        toast.error("Failed to make post.");
-        return;
+
+      // Create the post
+      try {
+        const result = await addPost(userId, inputValue, imageUrl);
+
+        if (!result) {
+          throw new Error("Failed to create post");
+        }
+
+        // Success - clear form and show success message
+        toast.success("Posted Successfully!");
+
+        // Clear form only on success
+        removeFile(); // Use the removeFile function
+        setInputValue("");
+      } catch (postError) {
+        console.error("Post creation error:", postError);
+        toast.error("Failed to create post. Please try again.");
+        // Don't clear form on error so user can retry
       }
-      toast.success("Posted Successfully!!");
-    } else {
-      addPost(userId, inputValue, "");
-      if (errorInPosting) {
-        toast.error("Failed to make post.");
-        return;
-      }
-      toast.success("Posted Successfully!!");
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      toast.error("An unexpected error occurred. Please try again.");
     }
-    setFile(null);
-    setInputValue("");
-    setImgUrl("");
-    setVideoUrl("");
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
 
-      // Check file size (2MB = 2 * 1024 * 1024 bytes)
-      const maxSize = 3 * 1024 * 1024; // 2MB in bytes
+      // Check file size (3MB = 3 * 1024 * 1024 bytes)
+      const maxSize = 3 * 1024 * 1024; // 3 MB in bytes
 
       if (selectedFile.size > maxSize) {
         const fileSizeMB = (selectedFile.size / (1024 * 1024)).toFixed(2);
@@ -83,12 +104,33 @@ const HomeFeedsPage = () => {
         return;
       }
 
+      // Clean up previous object URLs to prevent memory leaks
+      if (imgUrl) {
+        URL.revokeObjectURL(imgUrl);
+      }
+      if (videoUrl) {
+        URL.revokeObjectURL(videoUrl);
+      }
+
+      // Clear both URLs first
+      setImgUrl("");
+      setVideoUrl("");
+
+      // Set the file
       setFile(selectedFile);
 
+      // Create new object URL based on file type
       if (selectedFile.type.startsWith("image/")) {
-        setImgUrl(URL.createObjectURL(selectedFile));
+        const newImageUrl = URL.createObjectURL(selectedFile);
+        setImgUrl(newImageUrl);
       } else if (selectedFile.type.startsWith("video/")) {
-        setVideoUrl(URL.createObjectURL(selectedFile));
+        const newVideoUrl = URL.createObjectURL(selectedFile);
+        setVideoUrl(newVideoUrl);
+      } else {
+        toast.error("Please select a valid image or video file.");
+        e.target.value = "";
+        setFile(null);
+        return;
       }
     }
   };
@@ -119,6 +161,32 @@ const HomeFeedsPage = () => {
     loadMore();
   };
 
+  const removeFile = () => {
+    // Revoke object URLs to prevent memory leaks
+    if (imgUrl) {
+      URL.revokeObjectURL(imgUrl);
+    }
+    if (videoUrl) {
+      URL.revokeObjectURL(videoUrl);
+    }
+
+    // Clear all states
+    setFile(null);
+    setImgUrl("");
+    setVideoUrl("");
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      // Clean up object URLs when component unmounts
+      if (imgUrl) URL.revokeObjectURL(imgUrl);
+      if (videoUrl) URL.revokeObjectURL(videoUrl);
+    };
+  }, []);
   return (
     <>
       <div className="bg-black flex">
@@ -185,7 +253,7 @@ const HomeFeedsPage = () => {
                           // Optional: limit video height
                         ></video>
                         <button
-                          onClick={() => setVideoUrl("")}
+                          onClick={removeFile}
                           className="absolute -top-2 -right-2 bg-gray-900 text-white p-2 rounded-full"
                         >
                           <X />
@@ -201,7 +269,7 @@ const HomeFeedsPage = () => {
                         />
                         <button
                           className="absolute -top-2 -right-2 bg-gray-900 text-white p-2 rounded-full"
-                          onClick={() => setImgUrl("")}
+                          onClick={removeFile}
                         >
                           <X />
                         </button>
@@ -211,6 +279,7 @@ const HomeFeedsPage = () => {
                   <div className="flex justify-between items-center">
                     <label className="cursor-pointer">
                       <input
+                        ref={fileInputRef}
                         type="file"
                         accept="image/*,video/*"
                         onChange={handleFileChange}
