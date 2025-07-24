@@ -3,9 +3,9 @@ import LeftNav from "./components/leftNav.tsx";
 
 const PrivateLayout: React.FC = () => {
   return (
-    <div style={{ display: "flex" }}>
+    <div>
       <LeftNav /> {/* This will render once and stay mounted */}
-      <main style={{ flex: 1 }}>
+      <main>
         <Outlet /> {/* Private route content will render here */}
       </main>
     </div>

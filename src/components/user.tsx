@@ -5,14 +5,24 @@ import { LoadingOutlined } from "@ant-design/icons";
 import { Spin } from "antd";
 import { toast } from "sonner";
 import useUnfollow from "../hooks/useUnfollow.ts";
+import { supabase } from "../supabaseClient.jsx";
 
+// Assuming you have a 'follows' table with columns: follower_id, followed_id, created_at
 const followUser = async (followerId: string, followedId: string) => {
-  const variables = {
-    followerId,
-    followedId,
-  };
-  const response = await fetchMutationGraphQL(FOLLOW, variables);
-  return response;
+  const { data, error } = await supabase
+    .from("followers")
+    .insert({
+      follower_id: followerId,
+      followed_id: followedId,
+      created_at: new Date().toISOString(),
+    })
+    .select();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
 };
 
 interface UserSuggestion {

@@ -30,7 +30,7 @@ root.render(
         <Provider store={store}>
           <Routes />
         </Provider>
-        <AuthDebug />
+        {/* <AuthDebug /> */}
         <Toaster position="bottom-right" richColors />
       </QueryClientProvider>
     </BrowserRouter>
